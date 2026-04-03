@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>神盾局：宇宙势力格局分析</title>
+    <style>
+        :root {
+            --shield-cyan: #00f2ff;
+            --shield-blue: #0066ff;
+            --shield-bg: #050a10;
+            --glass-bg: rgba(10, 25, 47, 0.85);
+        }
+
+        body, html {
+            margin: 0; padding: 0; background-color: var(--shield-bg); color: white;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; overflow-x: hidden; height: 100vh;
+        }
+
+        .main-wrapper {
+            min-height: 100vh; width: 100vw; display: flex; flex-direction: column;
+            background: linear-gradient(rgba(5, 10, 16, 0.85), rgba(5, 10, 16, 0.85)), url('./pic/main_bg.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+
+        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+
+        .navbar {
+            height: 65px; background: rgba(5, 15, 30, 0.95); border-bottom: 2px solid var(--shield-blue);
+            display: flex; align-items: center; padding: 0 50px; flex-shrink: 0; z-index: 1000;
+        }
+        .nav-brand { font-weight: bold; letter-spacing: 2px; color: var(--shield-cyan); display: flex; align-items: center; }
+        .nav-links { margin-left: auto; display: flex; gap: 25px; }
+        .nav-item { color: #aaa; text-decoration: none; padding: 10px 15px; font-size: 14px; transition: 0.3s; }
+        .nav-item:hover { color: var(--shield-cyan); }
+        .nav-active { border-bottom: 2px solid var(--shield-cyan); color: var(--shield-cyan) !important; background: rgba(0, 242, 255, 0.1); }
+
+        .content { flex-grow: 1; padding: 40px; box-sizing: border-box; }
+        .glass-panel {
+            background: var(--glass-bg); border: 1px solid var(--shield-blue); border-left: 5px solid var(--shield-cyan);
+            border-radius: 4px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-box { background: rgba(0,0,0,0.4); padding: 20px; border: 1px solid var(--shield-blue); text-align: center; }
+        .stat-val { font-size: 36px; color: var(--shield-cyan); font-family: 'Courier New'; font-weight: bold; }
+
+        .champion-section {
+            display: grid; grid-template-columns: 280px 1fr; gap: 30px; align-items: center;
+            background: linear-gradient(90deg, rgba(0,242,255,0.1) 0%, transparent 100%);
+            border: 1px solid var(--shield-cyan); padding: 20px; border-radius: 8px; margin-bottom: 30px;
+        }
+        .champ-img { width: 100%; height: 350px; object-fit: cover; border: 2px solid var(--shield-cyan); box-shadow: 0 0 20px var(--shield-cyan); }
+        .champ-label { background: var(--shield-cyan); color: black; padding: 5px 15px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+
+        .rank-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .rank-table th { text-align: left; color: var(--shield-cyan); border-bottom: 2px solid var(--shield-cyan); padding: 10px; }
+        .rank-table td { padding: 12px 10px; border-bottom: 1px solid rgba(0,242,255,0.1); }
+        .rank-table tr:hover { background: rgba(0,242,255,0.05); }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        
+        /* 帅气的下拉框 */
+        .rank-selector {
+            background: rgba(13, 25, 48, 0.9); color: var(--shield-cyan); border: 1px solid var(--shield-cyan);
+            padding: 8px 15px; font-weight: bold; border-radius: 4px; outline: none; cursor: pointer; font-size: 16px;
+        }
+        .rank-selector option { background: #050a10; color: white; }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-lightning"></canvas>
+
+    <div class="main-wrapper">
+        <nav class="navbar">
+            <div class="nav-brand"><img src="./pic/shield_logo.webp" width="50" style="margin-right:10px;"> SHIELD_STRATEGIC_COMMAND</div>
+            <div class="nav-links">
+                <a href="dashboard_rendered.html" class="nav-item nav-active">势力格局</a>
+                <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
+                <a href="sim_rendered.html" class="nav-item">生存演习</a>
+                <a href="game_rendered.html" class="nav-item">回响计划</a>
+            </div>
+        </nav>
+
+        <div class="content">
+            <h1>🌐 宇宙社交权力版图分析</h1>
+
+            <div class="grid-3">
+                <div class="stat-box"><p>ACTIVE_TARGETS</p><div class="stat-val">{{ total_heroes }}</div></div>
+                <div class="stat-box"><p>AVG_CONNECTION</p><div class="stat-val">3.2 STEPS</div></div>
+                <div class="stat-box"><p>TOTAL_INTEL_LINES</p><div class="stat-val">165,307</div></div>
+            </div>
+
+            <!-- 控制器：下拉框 -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+                <h2 style="margin: 0;">🏆 战略枢纽与影响力评估</h2>
+                <select id="rankSelector" class="rank-selector" onchange="toggleRankMode()">
+                    <option value="degree">切换维度：人脉广度榜 (社交知名度)</option>
+                    <option value="between">切换维度：外交枢纽榜 (跨界联系人)</option>
+                </select>
+            </div>
+
+            <!-- 名望榜的冠军 -->
+            <div id="champ-degree">
+                {{ champ_degree_html }}
+            </div>
+            <!-- 外交榜的冠军 (初始隐藏) -->
+            <div id="champ-between" style="display: none;">
+                {{ champ_between_html }}
+            </div>
+
+            <div class="charts-grid">
+                <div class="glass-panel">
+                    <h3>⚖️ 阵营影响力分布</h3>
+                    <div id="alignment-chart">{{ alignment_chart_html }}</div>
+                </div>
+                <div class="glass-panel">
+                    <h3>⚡ 超人类能力来源分布</h3>
+                    <div id="power-chart">{{ power_chart_html }}</div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <h3>🏆 超人类社交威望排行榜 (TOP 15)</h3>
+                <!-- 名望榜表格 -->
+                <div id="table-degree">
+                    {{ table_degree_html }}
+                </div>
+                <!-- 外交榜表格 (初始隐藏) -->
+                <div id="table-between" style="display: none;">
+                    {{ table_between_html }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 榜单切换逻辑
+        function toggleRankMode() {
+            const mode = document.getElementById("rankSelector").value;
+            if (mode === "degree") {
+                document.getElementById("champ-degree").style.display = "block";
+                document.getElementById("champ-between").style.display = "none";
+                document.getElementById("table-degree").style.display = "block";
+                document.getElementById("table-between").style.display = "none";
+            } else {
+                document.getElementById("champ-degree").style.display = "none";
+                document.getElementById("champ-between").style.display = "block";
+                document.getElementById("table-degree").style.display = "none";
+                document.getElementById("table-between").style.display = "block";
+            }
+        }
+
+        // --- 鼠标闪电特效 ---
+        const canvas = document.getElementById('canvas-lightning');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let mouse = { x: -1000, y: -1000 };
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
+        let particles =[];
+        class Particle {
+            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random() * 1.5 + 0.5; this.speedX = Math.random() * 2 - 1; this.speedY = Math.random() * 2 - 1; this.color = '#00f2ff'; this.life = 60; }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
+            draw() { ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.shadowBlur = 5; ctx.shadowColor = this.color; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); ctx.stroke(); }
+        }
+        function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<particles.length; i++) { particles[i].update(); particles[i].draw(); if(particles[i].life <= 0) { particles.splice(i, 1); i--; } } requestAnimationFrame(animate); }
+        animate();
+    </script>
+</body>
+</html>

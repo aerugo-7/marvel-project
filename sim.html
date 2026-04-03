@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>神盾局：网络生存演习终端</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root { --shield-cyan: #00f2ff; --shield-blue: #0066ff; --shield-danger: #ff4b4b; --shield-bg: #050a10; }
+        body, html { margin: 0; padding: 0; background-color: var(--shield-bg); color: white; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; overflow: hidden; height: 100vh; }
+        
+        /* 统一背景逻辑 */
+        .main-wrapper { 
+            height: 100vh; width: 100vw; display: flex; flex-direction: column; 
+            background: linear-gradient(rgba(5, 10, 16, 0.9), rgba(5, 10, 16, 0.9)), url('./pic/main_bg.jpg'); 
+            background-size: cover; background-position: center; background-attachment: fixed; 
+        }
+
+        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+        
+        /* 导航栏样式 */
+        .navbar { height: 65px; background: rgba(5, 15, 30, 0.95); border-bottom: 2px solid var(--shield-blue); display: flex; align-items: center; padding: 0 50px; flex-shrink: 0; z-index: 1000; }
+        .nav-brand { font-weight: bold; letter-spacing: 2px; color: var(--shield-cyan); display: flex; align-items: center; }
+        .nav-links { margin-left: auto; display: flex; gap: 25px; }
+        .nav-item { color: #aaa; text-decoration: none; padding: 10px 15px; font-size: 14px; transition: 0.3s; }
+        .nav-item:hover { color: var(--shield-cyan); }
+        .nav-active { border-bottom: 2px solid var(--shield-danger); color: var(--shield-danger) !important; background: rgba(255, 75, 75, 0.1); }
+
+        .content { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; position: relative; z-index: 10; }
+        
+        .glass-panel { 
+            background: rgba(20, 5, 5, 0.85); 
+            border: 1px solid var(--shield-danger); 
+            border-left: 5px solid var(--shield-danger); 
+            padding: 25px; border-radius: 4px; 
+            box-shadow: 0 10px 30px rgba(255, 75, 75, 0.2); 
+            margin-bottom: 30px; 
+        }
+        
+        /* 搜索框与控件：强制黑字白底 */
+        .shield-input { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; color: #000; background: #fff; border: 2px solid var(--shield-danger); border-radius: 5px; outline: none; box-sizing: border-box; }
+        select { padding: 10px; font-size: 16px; font-weight: bold; color: #000; background: #fff; border: 2px solid var(--shield-danger); border-radius: 5px; width: 100%; cursor: pointer; }
+        
+        /* 标签样式 */
+        .hero-tag { background: rgba(255, 75, 75, 0.2); border: 1px solid var(--shield-danger); color: white; padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; animation: fadeIn 0.3s; }
+        .remove-btn { cursor: pointer; color: var(--shield-danger); font-weight: bold; font-size: 1.2rem; }
+        .remove-btn:hover { color: white; }
+
+        .action-btn { background: rgba(255, 75, 75, 0.1); color: var(--shield-danger); border: 2px solid var(--shield-danger); padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; border-radius: 5px; margin-top: 20px; text-transform: uppercase; }
+        .action-btn:hover { background: var(--shield-danger); color: white; box-shadow: 0 0 20px var(--shield-danger); }
+        
+        .result-panel { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="notranslate">
+    <canvas id="canvas-lightning"></canvas>
+    
+    <div class="main-wrapper">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-brand"><img src="./pic/shield_logo.webp" width="40" style="margin-right:15px;"> SHIELD_STRATEGIC_COMMAND</div>
+            <div class="nav-links">
+                <a href="dashboard_rendered.html" class="nav-item">势力格局</a>
+                <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
+                <a href="sim_rendered.html" class="nav-item nav-active">生存演习</a>
+                <a href="game_rendered.html" class="nav-item">回响计划</a>
+            </div>
+        </nav>
+
+        <div class="content">
+            <h1 style="color: var(--shield-danger); border-bottom: 2px solid #331111; padding-bottom: 10px;">💀 宇宙稳定性压力测试演习</h1>
+            
+            <div class="glass-panel" style="background: rgba(255, 75, 75, 0.05); border-left-width: 10px;">
+                <b>🔬 实验目的：漫威宇宙在极端灾难下会瓦解吗？</b><br>
+                漫威社交网具有极高的<b>“冗余性”</b>。本模块支持您手动指定多名核心领袖进行“移除测试”。系统将利用实时图论引擎计算：如果这些节点消失，宇宙剩余的社交骨架是否依然能维持整体连通。
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px;">
+                <!-- 控制台 -->
+                <div class="glass-panel">
+                    <h3 style="color: var(--shield-danger); margin-top: 0;">⚙️ 灾难参数设定</h3>
+                    
+                    <label style="font-weight: bold; margin-bottom: 10px; display: block;">选择打击模式：</label>
+                    <select id="attackMode" onchange="toggleMode()">
+                        <option value="custom">自选斩首 (手动指定多个核心英雄)</option>
+                        <option value="random">随机湮灭 (模拟全宇宙灭霸响指)</option>
+                    </select>
+
+                    <!-- 模式 1: 自选英雄 -->
+                    <div id="ui-custom" style="margin-top: 25px;">
+                        <label style="font-weight: bold; margin-bottom: 5px; display: block;">搜索并锁定目标 (可多选)：</label>
+                        <input type="text" id="heroSearch" class="shield-input" list="heroDataList" placeholder="输入英雄中文名..." onchange="handleSelect()">
+                        <datalist id="heroDataList"></datalist>
+                        
+                        <div id="targetList" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; min-height: 50px;">
+                            <!-- 选中的标签会出现在这里 -->
+                        </div>
+                    </div>
+
+                    <!-- 模式 2: 随机滑块 -->
+                    <div id="ui-random" style="margin-top: 25px; display: none;">
+                        <label style="font-weight: bold;">设定随机消失人数：<span id="numVal" style="color: var(--shield-danger); font-size: 1.5rem;">50</span> 人</label>
+                        <input type="range" id="attackNum" min="10" max="500" step="10" value="50" oninput="document.getElementById('numVal').innerText = this.value" style="width: 100%; margin-top: 10px;">
+                    </div>
+
+                    <button class="action-btn" onclick="executeSimulation()">🚀 执行破坏模拟</button>
+                    <button onclick="resetSim()" style="background:none; border:none; color:#555; cursor:pointer; margin-top:10px; font-size:12px;">[ 重置演习数据 ]</button>
+                </div>
+
+                <!-- 结果展示 -->
+                <div class="glass-panel result-panel" id="res-panel">
+                    <h3 style="color: var(--shield-danger); margin-top: 0;">📊 战损深度评估报告</h3>
+                    <div id="gauge-chart" style="height: 160px;"></div>
+                    <div id="res-panel" style="display: none; max-height: 500px; overflow-y: auto; padding-right: 10px;"></div>
+                    <div id="concl-area" style="line-height: 1.6; font-size: 1.1rem; border-top: 1px solid #331111; padding-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据岛 -->
+    <script id="sim-data-capsule" type="application/json">
+        {{ sim_json_data }}
+    </script>
+
+    <script>
+        // --- 核心引擎加载 ---
+        let capsule = {};
+        let selectedEngNames = [];
+
+        try {
+            capsule = JSON.parse(document.getElementById('sim-data-capsule').textContent);
+            // 初始化下拉列表
+            const datalist = document.getElementById('heroDataList');
+            for (let eng in capsule.hero_names) {
+                let opt = document.createElement('option');
+                opt.value = capsule.hero_names[eng];
+                datalist.appendChild(opt);
+            }
+        } catch(e) { console.error("数据注入异常", e); }
+
+        function toggleMode() {
+            const mode = document.getElementById('attackMode').value;
+            document.getElementById('ui-custom').style.display = (mode === 'custom') ? 'block' : 'none';
+            document.getElementById('ui-random').style.display = (mode === 'random') ? 'block' : 'none';
+        }
+
+        function handleSelect() {
+            const input = document.getElementById('heroSearch');
+            const cnName = input.value;
+            const engName = Object.keys(capsule.hero_names).find(key => capsule.hero_names[key] === cnName);
+
+            if (engName && !selectedEngNames.includes(engName)) {
+                selectedEngNames.push(engName);
+                const tag = document.createElement('div');
+                tag.className = 'hero-tag';
+                tag.innerHTML = `${cnName} <span class="remove-btn" onclick="removeHero('${engName}', this)">×</span>`;
+                document.getElementById('targetList').appendChild(tag);
+            }
+            input.value = '';
+        }
+
+        function removeHero(eng, el) {
+            selectedEngNames = selectedEngNames.filter(n => n !== eng);
+            el.parentElement.remove();
+        }
+
+        function resetSim() {
+            selectedEngNames = [];
+            document.getElementById('targetList').innerHTML = '';
+            document.getElementById('res-panel').style.display = 'none';
+        }
+
+        // --- 实时图论演算法 (BFS) ---
+        function calculateNewLCC(removedSet) {
+            const adj = capsule.adj_list;
+            const visited = new Set();
+            let maxCompSize = 0;
+
+            for (let node in adj) {
+                if (visited.has(node) || removedSet.has(node)) continue;
+
+                let size = 0;
+                let queue = [node];
+                visited.add(node);
+
+                while (queue.length > 0) {
+                    let curr = queue.shift();
+                    size++;
+                    (adj[curr] || []).forEach(neighbor => {
+                        if (!visited.has(neighbor) && !removedSet.has(neighbor)) {
+                            visited.add(neighbor);
+                            queue.push(neighbor);
+                        }
+                    });
+                }
+                if (size > maxCompSize) maxCompSize = size;
+            }
+            return maxCompSize;
+        }
+
+        function executeSimulation() {
+            const mode = document.getElementById('attackMode').value;
+            let lossPct = 0;
+            let msg = "";
+
+            if (mode === 'custom') {
+                if (selectedEngNames.length === 0) return alert("请先选择目标英雄。");
+                const newSize = calculateNewLCC(new Set(selectedEngNames));
+                lossPct = ((capsule.initial_lcc - newSize) / capsule.initial_lcc * 100);
+                const names = selectedEngNames.map(e => capsule.hero_names[e]).join(', ');
+                msg = `已成功抹除目标：<b>${names}</b>。核心骨架网络已实时重算。`;
+            } else {
+                const num = document.getElementById('attackNum').value;
+                lossPct = capsule.random_stats[num].loss_pct;
+                msg = capsule.random_stats[num].msg;
+            }
+
+            // 显示结果
+            document.getElementById('res-panel').style.display = 'block';
+
+            // 绘制仪表盘
+            const gaugeData = [{
+                type: "indicator", mode: "gauge+number", value: lossPct,
+                number: { suffix: "%", font: { color: "#ff4b4b", size: 50 } },
+                gauge: { axis: { range: [0, 100],tickcolor:"white" }, bar: { color: "#ff4b4b" },bgcolor:"rgba(255,255,255,0.05)" }
+            }];
+            const layout = {
+                paper_bgcolor: "rgba(0,0,0,0)", font: { color: "white" }, height: 180, margin: { t: 5, b: 5, l: 30, r: 30 }
+            };
+            Plotly.newPlot('gauge-chart', gaugeData, layout,{displayModeBar: false});
+
+            // 细致结论解析
+
+            let concl = `<div style="margin-top:15px; border-top:1px solid #331111; padding-top:10px;"><b>🕵️ 深度评估：</b><br>`;
+            if (lossPct < 1) {
+                concl += `<span style="color:#00ffcc;">由于消失的英雄尚未触及核心纽带，宇宙骨架依然稳固。</span>`;
+            } else if (lossPct < 15) {
+                concl += `<span style="color:#ffaa00;">社交网络出现显著裂痕，幸存英雄间的联络成本大幅增加。</span>`;
+            } else {
+                concl += `<span style="color:#ff4b4b;">警告！骨架网已彻底瓦解。500名核心领袖中大部分已失联，漫威宇宙进入绝对孤立时代。</span>`;
+            }
+            concl += `</div>`;
+            document.getElementById('concl-area').innerHTML = `<p>${msg}</p>${concl}`;
+        }
+
+        // --- 闪电特效 (原版逻辑) ---
+        const canvas = document.getElementById('canvas-lightning'); const ctx = canvas.getContext('2d');
+        let width, height; function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let mouse = { x: -1000, y: -1000 }; window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
+        let particles = [];
+        class Particle {
+            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random() * 1.5 + 0.5; this.speedX = Math.random() * 2 - 1; this.speedY = Math.random() * 2 - 1; this.color = '#ff4b4b'; this.life = 60; }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
+            draw() { ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); ctx.stroke(); }
+        }
+        function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<particles.length; i++) { particles[i].update(); particles[i].draw(); if(particles[i].life <= 0) { particles.splice(i, 1); i--; } } requestAnimationFrame(animate); }
+        animate();
+    </script>
+</body>
+</html>

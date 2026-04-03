@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>神盾局：系统启动终端</title>
+    <style>
+        :root { --shield-cyan: #00f2ff; --shield-blue: #0066ff; --shield-bg: #050a10; }
+        body, html { margin: 0; padding: 0; background-color: var(--shield-bg); color: white; font-family: 'Microsoft YaHei', sans-serif; overflow: hidden; height: 100vh; }
+        
+        /* 封面背景 - 修正为相对路径 */
+        #page-cover {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(5, 10, 16, 0.6), rgba(5, 10, 16, 0.9)),
+                        url('./pic/cover_bg.jpg');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            z-index: 1;
+        }
+
+        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+        .hero-title { font-size: 100px; text-transform: uppercase; margin: 0; text-shadow: 0 0 20px var(--shield-blue); letter-spacing: 15px; }
+        
+        .enter-btn {
+            position: relative; z-index: 10001; margin-top: 40px; padding: 15px 50px;
+            border: 2px solid var(--shield-cyan); background: rgba(0, 242, 255, 0.1);
+            color: var(--shield-cyan); font-size: 20px; cursor: pointer; transition: 0.4s;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+        }
+        .enter-btn:hover { background: var(--shield-cyan); color: black; box-shadow: 0 0 30px var(--shield-cyan); }
+    </style>
+</head>
+<body>
+    <canvas id="canvas-lightning"></canvas>
+    <div id="page-cover">
+        <img src="./pic/shield_logo.webp" width="200" style="margin-bottom: 30px;">
+        <h1 class="hero-title">SHIELD</h1>
+        <p style="font-size: 24px; letter-spacing: 5px;">全球超人类动态监测与综合评估系统</p>
+        <button class="enter-btn" onclick="location.href='dashboard_rendered.html'">INITIALIZE SYSTEM</button>
+    </div>
+    <script>
+        /* 这里粘贴你提供的鼠标特效 JS 代码，不要做任何改动 */
+        const canvas = document.getElementById('canvas-lightning');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let mouse = { x: -1000, y: -1000 };
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
+        let particles = [];
+        class Particle {
+            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random() * 1.5 + 0.5; this.speedX = Math.random() * 2 - 1; this.speedY = Math.random() * 2 - 1; this.color = '#00f2ff'; this.life = 60; }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
+            draw() { ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.shadowBlur = 5; ctx.shadowColor = this.color; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); ctx.stroke(); }
+        }
+        function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<particles.length; i++) { particles[i].update(); particles[i].draw(); if(particles[i].life <= 0) { particles.splice(i, 1); i--; } } requestAnimationFrame(animate); }
+        animate();
+    </script>
+</body>
+</html>
