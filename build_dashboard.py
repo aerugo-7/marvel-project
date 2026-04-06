@@ -4,11 +4,11 @@ import plotly.io as pio
 import os
 
 # --- 1. 路径配置 ---
-path = r"E:\课程资料\6-大三下\数字人文导论\漫威"
+path = r"E:\课程资料\6-大三下\数字人文导论\漫威_v3\漫威_v2"
 template_path = os.path.join(path, "dashboard.html")
 output_path = os.path.join(path, "dashboard_rendered.html")
 
-print("🔄 正在启动数据双轨注入引擎...")
+print("[Build] Starting data injection...")
 
 # --- 2. 加载终极数据 ---
 df = pd.read_csv(os.path.join(path, "hero_master_final.csv"))
@@ -99,5 +99,5 @@ with open(output_path, 'w', encoding='utf-8') as f:
     f.write(html_content)
 
 print("-" * 30)
-print(f"✅ 势力格局页双轨注入完美完成！")
-print(f"请在浏览器中双击打开: {output_path}")
+print(f"[OK] Faction Dashboard inject completed!")
+print(f"Please open in browser: {output_path}")

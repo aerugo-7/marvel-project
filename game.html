@@ -18,13 +18,26 @@
         .nav-active { border-bottom: 2px solid var(--shield-game); color: var(--shield-game) !important; background: rgba(241, 196, 15, 0.1); }
 
         .content { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; overflow: hidden; }
-        .terminal { width: 100%; max-width: 900px; background: rgba(10, 20, 35, 0.98); border: 2px solid var(--shield-cyan); padding: 40px; border-radius: 4px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); position: relative; max-height: 85vh; overflow-y: auto; }
+        .terminal { width: auto; max-width: 900px; background: rgba(10, 20, 35, 0.98); border: 2px solid var(--shield-cyan); padding: 40px; border-radius: 4px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); position: relative; max-height: 85vh; overflow-y: auto; transition: all 0.3s; }
+        .terminal:hover { box-shadow: 0 0 40px rgba(241, 196, 15, 0.25); }
+        .terminal::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(241, 196, 15, 0.04), transparent);
+            transition: left 0.6s; pointer-events: none; z-index: 1;
+        }
+        .terminal:hover::before { left: 100%; }
         
         .screen { display: none; }
         .active-screen { display: block; animation: scanFade 0.4s forwards; }
         @keyframes scanFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
 
-        .info-box { background: rgba(0, 242, 255, 0.15); border-left: 5px solid var(--shield-cyan); padding: 20px; margin-bottom: 25px; font-size: 1.1rem; line-height: 1.6; }
+        .info-box { background: rgba(0, 242, 255, 0.15); border-left: 5px solid var(--shield-cyan); padding: 20px; margin-bottom: 25px; font-size: 1.1rem; line-height: 1.6; position: relative; overflow: hidden; transition: all 0.3s; }
+        .info-box::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(241, 196, 15, 0.06), transparent);
+            transition: left 0.5s; pointer-events: none;
+        }
+        .info-box:hover::before { left: 100%; box-shadow: inset 0 0 20px rgba(241, 196, 15, 0.08); }
 
         /* 按钮与输入框 */
         .intel-input { width: 100%; background: rgba(255,255,255,0.05); border: none; border-bottom: 2px solid var(--shield-cyan); color: white; font-size: 1.5rem; padding: 12px; margin-bottom: 30px; outline: none; box-sizing: border-box; }
@@ -56,14 +69,32 @@
                 <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
                 <a href="sim_rendered.html" class="nav-item">生存演习</a>
                 <a href="game_rendered.html" class="nav-item nav-active">回响计划</a>
+                <a href="contact.html" class="nav-item">联系我们</a>
             </div>
         </nav>
 
         <div class="content">
             <div class="terminal">
                 
+                <!-- 0. 欢迎页 (说明 + 开始按钮) -->
+                <div id="scr-intro" class="screen active-screen">
+                    <div class="info-box" style="border-left-color: var(--shield-game); background: rgba(241, 196, 15, 0.15); text-align:center;">
+                        <h2 style="color: var(--shield-game); margin-top:0;">◈ ECHO PROTOCOL / 回响计划 ◈</h2>
+                        <hr style="border-color: rgba(241,196,15,0.3); margin:15px 0;">
+                        <p style="text-align:left;"><b>什么是回响计划？</b><br>
+                        回响计划(ECHO PROTOCOL)是我们开发的一项战略身份测绘系统。基于 <b>16.5 万条漫威宇宙社交连线与博弈论坐标</b>，通过分析您的价值观倾向、决策模式与社交定位，为您匹配最契合的英雄身份。</p>
+                        <p style="text-align:left;"><b>📡 测试原理：</b><br>
+                        系统会基于您的行动信条、战术特长、负面底线，以及在经典漫威场景中的决策选择，测绘您在<b>"秩序-混沌"</b>与<b>"个人-集体"</b>两个维度的坐标位置，从而找到与您决策模式最相似的超级英雄。</p>
+                        <p style="text-align:left;"><b>⏱️ 测试流程：</b><br>
+                        步骤1️⃣ 录入身份锚点 → 步骤2️⃣ 现实情境决策(8题) → 步骤3️⃣ 身份揭秘 → 步骤4️⃣ 战略模拟 → 步骤5️⃣ 审计报告</p>
+                        <hr style="border-color: rgba(241,196,15,0.3); margin:15px 0;">
+                        <span style="font-size: 0.95rem; color: #aaa;">▲ 整个过程约需 3-5 分钟，共 8 道选择题</span>
+                    </div>
+                    <button class="choice-btn" style="text-align:center; font-size:1.3rem; padding:25px;" onclick="startTest()">[ 初始化系统，开始测试 ]</button>
+                </div>
+
                 <!-- 1. 语义锚点 (Phase 1.1) -->
-                <div id="scr-1" class="screen active-screen">
+                <div id="scr-1" class="screen">
                     <div class="info-box">
                         <b>🔍 步骤 01/05：身份锚点测绘</b><br>
                         系统正在初始化。请基于直觉录入您的核心办事原则与战术底线。
@@ -165,6 +196,12 @@
             { t: "社交倾向：面对资源分配争议，你的原则是：", opts: [{n:"优先保障核心骨干的作战效率。", z:1.5},{n:"优先平衡边缘群体的社交生存。", z:-1.5}] },
             { t: "社交倾向：如果你失联了，你认为你的朋友圈会：", opts: [{n:"迅速找到替代者维持运转。", z:1.2},{n:"瞬间陷入瘫痪和分裂。", z:-1.2}] }
         ];
+
+        function startTest() {
+            document.getElementById('scr-intro').style.display = 'none';
+            document.getElementById('scr-1').style.display = 'block';
+            document.querySelector('.terminal').scrollTop = 0;
+        }
 
         function goPhase2() { 
             const m = document.getElementById('motto').value.trim();

@@ -3,42 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <title>神盾局：系统启动终端</title>
+    <link rel="stylesheet" href="shield_styles.css">
     <style>
-        :root { --shield-cyan: #00f2ff; --shield-blue: #0066ff; --shield-bg: #050a10; }
-        body, html { margin: 0; padding: 0; background-color: var(--shield-bg); color: white; font-family: 'Microsoft YaHei', sans-serif; overflow: hidden; height: 100vh; }
+        /* 首页专属样式 */
         
-        /* 封面背景 - 修正为相对路径 */
+        /* 封面背景 */
         #page-cover {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(5, 10, 16, 0.6), rgba(5, 10, 16, 0.9)),
+            background: linear-gradient(rgba(5, 10, 16, 0.7), rgba(5, 10, 16, 0.95)),
                         url('./pic/cover_bg.jpg');
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
             z-index: 1;
         }
 
-        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
-        .hero-title { font-size: 100px; text-transform: uppercase; margin: 0; text-shadow: 0 0 20px var(--shield-blue); letter-spacing: 15px; }
-        
-        .enter-btn {
-            position: relative; z-index: 10001; margin-top: 40px; padding: 15px 50px;
-            border: 2px solid var(--shield-cyan); background: rgba(0, 242, 255, 0.1);
-            color: var(--shield-cyan); font-size: 20px; cursor: pointer; transition: 0.4s;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+        /* 盾牌网格纹理 */
+        #page-cover::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
         }
-        .enter-btn:hover { background: var(--shield-cyan); color: black; box-shadow: 0 0 30px var(--shield-cyan); }
+
+        /* 扫描线动画 */
+        .scanline {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+        .scanline::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: 0;
+            width: 100%; height: 30%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.03), transparent);
+            animation: scanMove 6s linear infinite;
+        }
+        @keyframes scanMove {
+            0% { top: -30%; }
+            100% { top: 130%; }
+        }
+
+        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+        
+        /* SHIELD 标题 - 呼吸光晕效果 */
+        .hero-title { 
+            font-size: 100px; 
+            text-transform: uppercase; 
+            margin: 0; 
+            letter-spacing: 15px;
+            color: var(--shield-cyan);
+            text-shadow: 
+                0 0 10px var(--shield-cyan),
+                0 0 20px var(--shield-cyan),
+                0 0 40px var(--shield-cyan),
+                0 0 80px var(--shield-blue);
+            animation: shieldPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes shieldPulse {
+            0%, 100% {
+                text-shadow: 
+                    0 0 10px var(--shield-cyan),
+                    0 0 20px var(--shield-cyan),
+                    0 0 40px var(--shield-cyan),
+                    0 0 80px var(--shield-blue);
+                filter: brightness(1);
+            }
+            50% {
+                text-shadow: 
+                    0 0 20px var(--shield-cyan),
+                    0 0 40px var(--shield-cyan),
+                    0 0 60px var(--shield-cyan),
+                    0 0 100px var(--shield-blue);
+                filter: brightness(1.2);
+            }
+        }
+
+        /* Logo 脉冲光晕 */
+        .logo-container {
+            position: relative;
+            animation: logoFloat 4s ease-in-out infinite;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .logo-container::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px; height: 220px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.2) 0%, transparent 70%);
+            animation: logoGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes logoGlow {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* 副标题 */
+        .subtitle {
+            font-size: 24px; 
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 10px;
+        }
+
+        /* 能量脉冲按钮 */
+        .enter-btn {
+            position: relative; 
+            z-index: 10001; 
+            margin-top: 50px; 
+            padding: 18px 60px;
+            border: 2px solid var(--shield-cyan); 
+            background: rgba(0, 242, 255, 0.1);
+            color: var(--shield-cyan); 
+            font-size: 20px; 
+            font-weight: bold;
+            letter-spacing: 3px;
+            cursor: pointer; 
+            transition: all 0.4s;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            overflow: hidden;
+        }
+        
+        .enter-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0; height: 0;
+            background: rgba(0, 242, 255, 0.4);
+            border-radius: 50%;
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .enter-btn:hover {
+            background: var(--shield-cyan);
+            color: var(--shield-dark);
+            box-shadow: 
+                0 0 30px var(--shield-cyan),
+                0 0 60px var(--shield-cyan),
+                0 0 100px rgba(0, 242, 255, 0.5);
+        }
+        
+        .enter-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+        
+        /* 按钮内部文字 */
+        .btn-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 底部能量条 */
+        .energy-bar-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                var(--shield-cyan) 20%, 
+                var(--shield-cyan) 80%, 
+                transparent 100%);
+            animation: energyFlow 2s linear infinite;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas-lightning"></canvas>
+    <div class="scanline"></div>
     <div id="page-cover">
-        <img src="./pic/shield_logo.webp" width="200" style="margin-bottom: 30px;">
+        <div class="logo-container">
+            <img src="./pic/shield_logo.webp" width="200" style="margin-bottom: 30px;">
+        </div>
         <h1 class="hero-title">SHIELD</h1>
-        <p style="font-size: 24px; letter-spacing: 5px;">全球超人类动态监测与综合评估系统</p>
-        <button class="enter-btn" onclick="location.href='dashboard_rendered.html'">INITIALIZE SYSTEM</button>
+        <p class="subtitle">全球超人类动态监测与综合评估系统</p>
+        <button class="enter-btn" onclick="location.href='dashboard_rendered.html'">
+            <span class="btn-text">INITIALIZE SYSTEM</span>
+        </button>
     </div>
+    <div class="energy-bar-bottom"></div>
     <script>
-        /* 这里粘贴你提供的鼠标特效 JS 代码，不要做任何改动 */
+        /* 鼠标闪电特效 */
         const canvas = document.getElementById('canvas-lightning');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -48,11 +210,35 @@
         window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
         let particles = [];
         class Particle {
-            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random() * 1.5 + 0.5; this.speedX = Math.random() * 2 - 1; this.speedY = Math.random() * 2 - 1; this.color = '#00f2ff'; this.life = 60; }
+            constructor(x, y) { 
+                this.x = x; this.y = y; 
+                this.size = Math.random() * 1.5 + 0.5; 
+                this.speedX = Math.random() * 2 - 1; 
+                this.speedY = Math.random() * 2 - 1; 
+                this.color = '#00f2ff'; 
+                this.life = 60; 
+            }
             update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
-            draw() { ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.shadowBlur = 5; ctx.shadowColor = this.color; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); ctx.stroke(); }
+            draw() { 
+                ctx.strokeStyle = this.color; 
+                ctx.lineWidth = this.size; 
+                ctx.shadowBlur = 5; 
+                ctx.shadowColor = this.color; 
+                ctx.beginPath(); 
+                ctx.moveTo(this.x, this.y); 
+                ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); 
+                ctx.stroke(); 
+            }
         }
-        function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<particles.length; i++) { particles[i].update(); particles[i].draw(); if(particles[i].life <= 0) { particles.splice(i, 1); i--; } } requestAnimationFrame(animate); }
+        function animate() { 
+            ctx.clearRect(0, 0, width, height); 
+            for(let i=0; i<particles.length; i++) { 
+                particles[i].update(); 
+                particles[i].draw(); 
+                if(particles[i].life <= 0) { particles.splice(i, 1); i--; } 
+            } 
+            requestAnimationFrame(animate); 
+        }
         animate();
     </script>
 </body>

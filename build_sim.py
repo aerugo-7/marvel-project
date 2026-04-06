@@ -5,10 +5,10 @@ import json
 import random
 from tqdm import tqdm
 
-print("☢️ 正在启动神盾局【稳定性演习】高维数据提取引擎...")
+print("[Sim] Starting stability exercise data extraction...")
 
 # --- 1. 路径配置 ---
-path = r"E:\课程资料\6-大三下\数字人文导论\漫威"
+path = r"d:\shuzirenwendaolun\Marvel_v2\漫威_v2"
 template_path = os.path.join(path, "sim.html")
 output_path = os.path.join(path, "sim_rendered.html")
 
@@ -41,7 +41,7 @@ initial_backbone_lcc = len(max(nx.connected_components(G_backbone), key=len))
 # 核心修改：分母改为 500 (initial_backbone_lcc)，让损毁感与玩家操作量级吻合
 random_sim_results = {}
 
-print("📊 正在针对 500 名核心领袖推演随机灾难...")
+print("[Sim] Simulating random disasters for 500 core heroes...")
 for num in tqdm(range(10, 510, 10)): 
     temp_G = G_backbone.copy() # 只在 500 人骨架网中模拟
     all_nodes = list(temp_G.nodes())
@@ -74,7 +74,7 @@ sim_data_capsule = {
 }
 
 # --- 6. 注入并生成最终网页 ---
-print("💉 正在向演习终端注入微型演算引擎...")
+print("[Sim] Injecting calculation engine...")
 try:
     with open(template_path, 'r', encoding='utf-8') as f:
         html_content = f.read()
@@ -86,7 +86,7 @@ try:
         f.write(html_content)
 
     print("-" * 30)
-    print(f"✅ 演习系统准备就绪！")
-    print(f"请使用浏览器打开成品：{output_path}")
+    print("[OK] Sim system ready!")
+    print(f"Please open in browser: {output_path}")
 except Exception as e:
-    print(f"❌ 注入失败：{e}")
+    print(f"[ERROR] Injection failed: {e}")

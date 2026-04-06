@@ -1,0 +1,696 @@
+/* 
+ * 🛡️ S.H.I.E.L.D. 漫威神盾局全局样式系统
+ * 包含：盾牌纹理背景、能量线条动画、漫威元素、玻璃效果等
+ */
+
+/* ========== CSS 变量定义 ========== */
+:root {
+    /* 基础色调 */
+    --shield-cyan: #00f2ff;
+    --shield-blue: #0066ff;
+    --shield-bg: #050a10;
+    --shield-dark: #020408;
+    --shield-glass: rgba(10, 25, 47, 0.85);
+    
+    /* 漫威经典色 */
+    --shield-red: #ed1d24;
+    --shield-gold: #ffd700;
+    --shield-danger: #ff4b4b;
+    
+    /* 能量光效 */
+    --energy-glow: rgba(0, 242, 255, 0.6);
+    --energy-glow-red: rgba(255, 75, 75, 0.6);
+    --energy-glow-gold: rgba(255, 215, 0, 0.6);
+    
+    /* 字体 */
+    --font-main: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'Courier New', monospace;
+}
+
+/* ========== 全局基础样式 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    background-color: var(--shield-bg);
+    color: white;
+    font-family: var(--font-main);
+    overflow-x: hidden;
+}
+
+/* ========== 盾牌网格背景纹理 ========== */
+.shield-bg {
+    position: relative;
+}
+
+.shield-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.shield-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, var(--shield-bg) 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ========== 扫描线动画效果 ========== */
+.scanline-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+    overflow: hidden;
+}
+
+.scanline-overlay::before {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(0, 242, 255, 0.03),
+        transparent
+    );
+    animation: scanLine 8s linear infinite;
+}
+
+@keyframes scanLine {
+    0% { top: -50%; }
+    100% { top: 150%; }
+}
+
+/* ========== 能量流动边框 ========== */
+.energy-border {
+    position: relative;
+    border: 2px solid transparent;
+    background: linear-gradient(var(--shield-bg), var(--shield-bg)) padding-box,
+                linear-gradient(90deg, var(--shield-cyan), var(--shield-blue), var(--shield-cyan)) border-box;
+    background-size: 200% 200%;
+    animation: energyFlow 3s linear infinite;
+}
+
+@keyframes energyFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 红色能量边框 (用于SIM页面) */
+.energy-border-red {
+    background: linear-gradient(var(--shield-bg), var(--shield-bg)) padding-box,
+                linear-gradient(90deg, var(--shield-danger), #ff6b6b, var(--shield-danger)) border-box;
+    background-size: 200% 200%;
+    animation: energyFlow 3s linear infinite;
+}
+
+/* 金色能量边框 (用于Game页面) */
+.energy-border-gold {
+    background: linear-gradient(var(--shield-bg), var(--shield-bg)) padding-box,
+                linear-gradient(90deg, var(--shield-gold), #ffed4a, var(--shield-gold)) border-box;
+    background-size: 200% 200%;
+    animation: energyFlow 3s linear infinite;
+}
+
+/* ========== 导航栏增强 ========== */
+.navbar {
+    height: 65px;
+    background: rgba(5, 15, 30, 0.95);
+    border-bottom: 2px solid var(--shield-blue);
+    display: flex;
+    align-items: center;
+    padding: 0 50px;
+    flex-shrink: 0;
+    z-index: 1000;
+    position: relative;
+}
+
+/* 导航栏底部能量流光 */
+.navbar::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--shield-cyan) 20%, 
+        var(--shield-cyan) 80%, 
+        transparent 100%);
+    opacity: 0.6;
+}
+
+.nav-brand {
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: var(--shield-cyan);
+    display: flex;
+    align-items: center;
+    text-shadow: 0 0 10px var(--energy-glow);
+}
+
+.nav-links {
+    margin-left: auto;
+    display: flex;
+    gap: 25px;
+}
+
+.nav-item {
+    color: #aaa;
+    text-decoration: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(0, 242, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.nav-item:hover {
+    color: var(--shield-cyan);
+}
+
+.nav-item:hover::before {
+    width: 100px;
+    height: 100px;
+}
+
+.nav-active {
+    border-bottom: 2px solid var(--shield-cyan);
+    color: var(--shield-cyan) !important;
+    background: rgba(0, 242, 255, 0.1);
+}
+
+/* ========== 玻璃面板 ========== */
+.glass-panel {
+    background: var(--shield-glass);
+    border: 1px solid var(--shield-blue);
+    border-left: 5px solid var(--shield-cyan);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 玻璃面板光效 */
+.glass-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(0, 242, 255, 0.05), 
+        transparent);
+    transition: left 0.5s;
+}
+
+.glass-panel:hover::before {
+    left: 100%;
+}
+
+/* ========== 卡片悬浮效果 ========== */
+.floating-card {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.floating-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 242, 255, 0.2);
+}
+
+/* ========== 按钮美化 ========== */
+.shield-btn {
+    position: relative;
+    padding: 15px 30px;
+    border: 2px solid var(--shield-cyan);
+    background: rgba(0, 242, 255, 0.1);
+    color: var(--shield-cyan);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.4s;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.shield-btn:hover {
+    background: var(--shield-cyan);
+    color: var(--shield-dark);
+    box-shadow: 0 0 30px var(--energy-glow);
+}
+
+/* 脉冲效果 */
+.shield-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(0, 242, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.shield-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* 红色按钮 (SIM) */
+.shield-btn-danger {
+    border-color: var(--shield-danger);
+    background: rgba(255, 75, 75, 0.1);
+    color: var(--shield-danger);
+}
+
+.shield-btn-danger:hover {
+    background: var(--shield-danger);
+    color: white;
+    box-shadow: 0 0 30px var(--energy-glow-red);
+}
+
+/* 金色按钮 (Game) */
+.shield-btn-gold {
+    border-color: var(--shield-gold);
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--shield-gold);
+}
+
+.shield-btn-gold:hover {
+    background: var(--shield-gold);
+    color: var(--shield-dark);
+    box-shadow: 0 0 30px var(--energy-glow-gold);
+}
+
+/* ========== 盾牌形状 clip-path ========== */
+.shield-shape {
+    clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+}
+
+/* ========== 数字滚动动画 ========== */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-val {
+    animation: countUp 0.5s ease-out;
+}
+
+/* ========== 页面淡入动画 ========== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* 延迟动画 */
+.fade-in-up-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.fade-in-up-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.fade-in-up-delay-3 { animation-delay: 0.3s; opacity: 0; }
+.fade-in-up-delay-4 { animation-delay: 0.4s; opacity: 0; }
+.fade-in-up-delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* ========== 呼吸光晕效果 ========== */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--energy-glow);
+        text-shadow: 0 0 20px var(--energy-glow);
+    }
+    50% {
+        box-shadow: 0 0 40px var(--energy-glow), 0 0 60px var(--energy-glow);
+        text-shadow: 0 0 40px var(--energy-glow);
+    }
+}
+
+.pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ========== 标题样式 ========== */
+.page-title {
+    font-size: 48px;
+    color: var(--shield-cyan);
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    text-shadow: 0 0 30px var(--shield-blue);
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-size: 24px;
+    color: var(--shield-cyan);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-left: 4px solid var(--shield-cyan);
+    padding-left: 15px;
+}
+
+/* ========== 表格样式增强 ========== */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    text-align: left;
+    color: var(--shield-cyan);
+    border-bottom: 2px solid var(--shield-cyan);
+    padding: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.data-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.data-table tr:hover {
+    background: rgba(0, 242, 255, 0.08);
+}
+
+.data-table tr:hover td {
+    color: var(--shield-cyan);
+}
+
+/* 斑马纹 */
+.data-table tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* ========== 输入框样式 ========== */
+.shield-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--shield-cyan);
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.shield-input:focus {
+    border-color: var(--shield-cyan);
+    box-shadow: 0 0 20px var(--energy-glow);
+    background: rgba(0, 242, 255, 0.1);
+}
+
+.shield-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* ========== 下拉框样式 ========== */
+.shield-select {
+    background: rgba(13, 25, 48, 0.9);
+    color: var(--shield-cyan);
+    border: 1px solid var(--shield-cyan);
+    padding: 8px 15px;
+    font-weight: bold;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.shield-select option {
+    background: #050a10;
+    color: white;
+}
+
+/* ========== 进度条/能量条 ========== */
+.energy-bar {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.energy-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--shield-cyan), var(--shield-blue));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.energy-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%);
+    animation: energyFlow 2s linear infinite;
+}
+
+/* ========== 标签样式 ========== */
+.shield-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    background: rgba(0, 242, 255, 0.15);
+    border: 1px solid var(--shield-cyan);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--shield-cyan);
+    transition: all 0.3s;
+}
+
+.shield-tag:hover {
+    background: var(--shield-cyan);
+    color: var(--shield-dark);
+}
+
+/* 红色标签 */
+.shield-tag-danger {
+    background: rgba(255, 75, 75, 0.2);
+    border-color: var(--shield-danger);
+    color: var(--shield-danger);
+}
+
+.shield-tag-danger:hover {
+    background: var(--shield-danger);
+    color: white;
+}
+
+/* 金色标签 */
+.shield-tag-gold {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: var(--shield-gold);
+    color: var(--shield-gold);
+}
+
+.shield-tag-gold:hover {
+    background: var(--shield-gold);
+    color: var(--shield-dark);
+}
+
+/* ========== 响应式网格 ========== */
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ========== 英雄卡片样式 ========== */
+.hero-card {
+    position: relative;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--shield-blue);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.hero-card:hover {
+    border-color: var(--shield-cyan);
+    box-shadow: 0 0 30px var(--energy-glow);
+    transform: scale(1.02);
+}
+
+.hero-card-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.hero-card-info {
+    padding: 15px;
+    text-align: center;
+}
+
+.hero-card-name {
+    color: var(--shield-cyan);
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+/* ========== 盾牌边框装饰 ========== */
+.shield-frame {
+    position: relative;
+    padding: 10px;
+    background: linear-gradient(135deg, var(--shield-blue), var(--shield-cyan));
+    clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+}
+
+.shield-frame-inner {
+    background: var(--shield-bg);
+    padding: 15px;
+    clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+}
+
+/* ========== 动画组合类 ========== */
+.animate-sequence > * {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-sequence > *:nth-child(1) { animation-delay: 0.1s; }
+.animate-sequence > *:nth-child(2) { animation-delay: 0.2s; }
+.animate-sequence > *:nth-child(3) { animation-delay: 0.3s; }
+.animate-sequence > *:nth-child(4) { animation-delay: 0.4s; }
+.animate-sequence > *:nth-child(5) { animation-delay: 0.5s; }
+.animate-sequence > *:nth-child(6) { animation-delay: 0.6s; }
+.animate-sequence > *:nth-child(7) { animation-delay: 0.7s; }
+.animate-sequence > *:nth-child(8) { animation-delay: 0.8s; }
+
+/* ========== 统计数字样式 ========== */
+.stat-box {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    border: 1px solid var(--shield-blue);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--shield-cyan), var(--shield-blue));
+}
+
+.stat-label {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 36px;
+    color: var(--shield-cyan);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    text-shadow: 0 0 20px var(--energy-glow);
+}
+
+/* ========== 主背景 ========== */
+.main-bg {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(rgba(5, 10, 16, 0.85), rgba(5, 10, 16, 0.85)), url('./pic/main_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+}
+
+/* ========== 内容区域 ========== */
+.content-area {
+    flex-grow: 1;
+    padding: 40px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 10;
+}

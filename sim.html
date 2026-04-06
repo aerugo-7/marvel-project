@@ -34,7 +34,15 @@
             padding: 25px; border-radius: 4px; 
             box-shadow: 0 10px 30px rgba(255, 75, 75, 0.2); 
             margin-bottom: 30px; 
+            position: relative; overflow: hidden; transition: all 0.3s;
         }
+        .glass-panel:hover { box-shadow: 0 20px 45px rgba(255, 75, 75, 0.3); }
+        .glass-panel::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 75, 75, 0.06), transparent);
+            transition: left 0.5s; pointer-events: none;
+        }
+        .glass-panel:hover::before { left: 100%; }
         
         /* 搜索框与控件：强制黑字白底 */
         .shield-input { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; color: #000; background: #fff; border: 2px solid var(--shield-danger); border-radius: 5px; outline: none; box-sizing: border-box; }
@@ -64,12 +72,45 @@
                 <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
                 <a href="sim_rendered.html" class="nav-item nav-active">生存演习</a>
                 <a href="game_rendered.html" class="nav-item">回响计划</a>
+                <a href="contact.html" class="nav-item">联系我们</a>
             </div>
         </nav>
 
         <div class="content">
-            <h1 style="color: var(--shield-danger); border-bottom: 2px solid #331111; padding-bottom: 10px;">💀 宇宙稳定性压力测试演习</h1>
+            <!-- 模块介绍卡片 -->
+            <div class="glass-panel" style="background: linear-gradient(135deg, rgba(255, 75, 75, 0.1) 0%, rgba(50, 10, 10, 0.3) 100%); border-left-width: 8px; padding: 30px;">
+                <div style="display: flex; align-items: center; gap: 25px;">
+                    <div style="font-size: 4rem; opacity: 0.9;">💀</div>
+                    <div style="flex: 1;">
+                        <h1 style="color: var(--shield-danger); margin: 0 0 10px 0; font-size: 2rem; text-shadow: 0 0 20px rgba(255, 75, 75, 0.5);">宇宙稳定性压力测试演习</h1>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.7; margin: 0;">
+                            本模块模拟漫威宇宙社交网络的极端灾难场景，测试宇宙在核心英雄"消失"后的社交韧性。支持<span style="color: var(--shield-danger);">自选斩首</span>（精准移除指定英雄）与<span style="color: var(--shield-danger);">随机湮灭</span>（模拟灭霸响指）两种模式。通过<span style="color: var(--shield-cyan);">图论节点移除算法</span>实时计算最大连通分量变化，量化评估宇宙社交网络的损毁程度。
+                        </p>
+                    </div>
+                </div>
+            </div>
             
+            <!-- 数据分析方法说明 -->
+            <div class="glass-panel" style="background: rgba(255, 75, 75, 0.08); border-left-width: 6px;">
+                <h3 style="color: var(--shield-danger); margin-top: 0;">🔬 宇宙稳定性压力测试原理</h3>
+                <p style="line-height: 1.8; margin-bottom: 12px;">
+                    <b>【测试方法】</b> 图论节点移除模拟 + 实时连通性计算
+                </p>
+                <p style="line-height: 1.8; margin-bottom: 12px;">
+                    <b>【核心指标：损毁率 (%)】</b><br>
+                    计算公式：<code style="color: #ff4b4b;">损毁率 = (原最大连通分量 - 新最大连通分量) / 原最大连通分量 × 100</code><br>
+                    <span style="color: #aaa;">解释：该数值表示宇宙社交网络的分裂程度。0%=完全韧性，100%=彻底瓦解</span>
+                </p>
+                <p style="line-height: 1.8; margin-bottom: 12px;">
+                    <b>【为什么损毁率通常极低？】</b><br>
+                    <span style="color: #aaa;">漫威宇宙具有惊人的"社交韧性"。例如你删除美国队长，但钢铁侠依然认识美队的所有朋友，并通过其他路径保持联系。这种冗余设计让宇宙能抵御一般性灾难。</span>
+                </p>
+                <p style="line-height: 1.8; margin: 0;">
+                    <b>【致命弱点：枢纽依赖】</b><br>
+                    <span style="color: #aaa;">虽然宇宙整体韧性极强，但如果精准删除那些"顶级枢纽"（如同时连接复仇者、X战警、魔法界的少数英雄），系统内部沟通效率会遭受毁灭性打击。</span>
+                </p>
+            </div>
+
             <div class="glass-panel" style="background: rgba(255, 75, 75, 0.05); border-left-width: 10px;">
                 <b>🔬 实验目的：漫威宇宙在极端灾难下会瓦解吗？</b><br>
                 漫威社交网具有极高的<b>“冗余性”</b>。本模块支持您手动指定多名核心领袖进行“移除测试”。系统将利用实时图论引擎计算：如果这些节点消失，宇宙剩余的社交骨架是否依然能维持整体连通。
@@ -113,6 +154,10 @@
                     <div id="gauge-chart" style="height: 160px;"></div>
                     <div id="res-panel" style="display: none; max-height: 500px; overflow-y: auto; padding-right: 10px;"></div>
                     <div id="concl-area" style="line-height: 1.6; font-size: 1.1rem; border-top: 1px solid #331111; padding-top: 15px;"></div>
+                    <!-- 技术实现说明 -->
+                    <p style="color: #666; font-size: 0.85rem; margin-top: 20px; border-top: 1px dashed #331111; padding-top: 10px;">
+                        <b>技术实现：</b>前端JavaScript内置BFS算法，在500名核心英雄骨架网上实时演算，无需后端通信
+                    </p>
                 </div>
             </div>
         </div>

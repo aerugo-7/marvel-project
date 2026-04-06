@@ -3,10 +3,10 @@ import networkx as nx
 import os
 import json
 
-print("🔄 正在启动档案局数据封装引擎...")
+print("[Build] Starting dossier data engine...")
 
 # --- 1. 路径配置 ---
-path = r"E:\课程资料\6-大三下\数字人文导论\漫威"
+path = r"E:\课程资料\6-大三下\数字人文导论\漫威_v3\漫威_v2"
 template_path = os.path.join(path, "dossier.html")
 output_path = os.path.join(path, "dossier_rendered.html")
 
@@ -37,8 +37,13 @@ for _, row in df.iterrows():
     cn_name = row['Chinese_Name']
     eng_name = row['English_Name']
     
-    # 获取图片链接
+    # 获取图片链接，并标准化路径格式
     img_url = str(row.get('Image_URL', './pic/shield_logo.webp'))
+    # 将反斜杠转为正斜杠，确保浏览器能正确解析
+    img_url = img_url.replace('\\', '/')
+    # 确保路径以 ./ 开头（相对路径）
+    if not img_url.startswith('./') and not img_url.startswith('http'):
+        img_url = './' + img_url
     
     # 雷达图数据放大处理
     radar = [
@@ -99,5 +104,5 @@ with open(output_path, 'w', encoding='utf-8') as f:
     f.write(html_content)
 
 print("-" * 30)
-print(f"✅ 绝密档案页注入完美完成！")
-print(f"请在浏览器中双击打开: {output_path}")
+print("[OK] Dossier inject completed!")
+print(f"Please open in browser: {output_path}")
