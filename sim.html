@@ -56,7 +56,7 @@
         .action-btn { background: rgba(255, 75, 75, 0.1); color: var(--shield-danger); border: 2px solid var(--shield-danger); padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; border-radius: 5px; margin-top: 20px; text-transform: uppercase; }
         .action-btn:hover { background: var(--shield-danger); color: white; box-shadow: 0 0 20px var(--shield-danger); }
         
-        .result-panel { display: none; }
+        .result-panel { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
@@ -68,10 +68,12 @@
         <nav class="navbar">
             <div class="nav-brand"><img src="./pic/shield_logo.webp" width="40" style="margin-right:15px;"> SHIELD_STRATEGIC_COMMAND</div>
             <div class="nav-links">
+                <a href="index.html" class="nav-item">首页</a>
                 <a href="dashboard_rendered.html" class="nav-item">势力格局</a>
                 <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
                 <a href="sim_rendered.html" class="nav-item nav-active">生存演习</a>
                 <a href="game_rendered.html" class="nav-item">回响计划</a>
+                <a href="simulation.html" class="nav-item">作战模拟舱</a>
                 <a href="contact.html" class="nav-item">联系我们</a>
             </div>
         </nav>
@@ -151,9 +153,21 @@
                 <!-- 结果展示 -->
                 <div class="glass-panel result-panel" id="res-panel">
                     <h3 style="color: var(--shield-danger); margin-top: 0;">📊 战损深度评估报告</h3>
-                    <div id="gauge-chart" style="height: 160px;"></div>
-                    <div id="res-panel" style="display: none; max-height: 500px; overflow-y: auto; padding-right: 10px;"></div>
-                    <div id="concl-area" style="line-height: 1.6; font-size: 1.1rem; border-top: 1px solid #331111; padding-top: 15px;"></div>
+                    
+                    <!-- 待机状态占位 -->
+                    <div id="gauge-placeholder" style="height: 220px; background: rgba(0,0,0,0.3); border: 2px dashed #444; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center; color: #555;">
+                            <div style="font-size: 2.5rem;">⏳</div>
+                            <div style="margin-top: 10px; font-size: 0.95rem;">等待执行破坏模拟...</div>
+                        </div>
+                    </div>
+                    <div id="gauge-chart" style="height: 220px; display: none;"></div>
+                    
+                    <div id="concl-area" style="line-height: 1.6; font-size: 1.1rem; border-top: 1px solid #331111; padding-top: 15px;">
+                        <p style="color: #666; text-align: center; padding: 20px 0;">
+                            🎯 请在左侧选择目标英雄或设定随机人数，然后点击「执行破坏模拟」查看宇宙稳定性评估。
+                        </p>
+                    </div>
                     <!-- 技术实现说明 -->
                     <p style="color: #666; font-size: 0.85rem; margin-top: 20px; border-top: 1px dashed #331111; padding-top: 10px;">
                         <b>技术实现：</b>前端JavaScript内置BFS算法，在500名核心英雄骨架网上实时演算，无需后端通信
@@ -213,7 +227,9 @@
         function resetSim() {
             selectedEngNames = [];
             document.getElementById('targetList').innerHTML = '';
-            document.getElementById('res-panel').style.display = 'none';
+            document.getElementById('gauge-placeholder').style.display = 'flex';
+            document.getElementById('gauge-chart').style.display = 'none';
+            document.getElementById('concl-area').innerHTML = `<p style="color: #666; text-align: center; padding: 20px 0;">🎯 请在左侧选择目标英雄或设定随机人数，然后点击「执行破坏模拟」查看宇宙稳定性评估。</p>`;
         }
 
         // --- 实时图论演算法 (BFS) ---
@@ -261,8 +277,9 @@
                 msg = capsule.random_stats[num].msg;
             }
 
-            // 显示结果
-            document.getElementById('res-panel').style.display = 'block';
+            // 显示结果（切换占位符与图表）
+            document.getElementById('gauge-placeholder').style.display = 'none';
+            document.getElementById('gauge-chart').style.display = 'block';
 
             // 绘制仪表盘
             const gaugeData = [{
@@ -271,7 +288,7 @@
                 gauge: { axis: { range: [0, 100],tickcolor:"white" }, bar: { color: "#ff4b4b" },bgcolor:"rgba(255,255,255,0.05)" }
             }];
             const layout = {
-                paper_bgcolor: "rgba(0,0,0,0)", font: { color: "white" }, height: 180, margin: { t: 5, b: 5, l: 30, r: 30 }
+                paper_bgcolor: "rgba(0,0,0,0)", font: { color: "white" }, height: 250, margin: { t: 10, b: 10, l: 30, r: 30 }
             };
             Plotly.newPlot('gauge-chart', gaugeData, layout,{displayModeBar: false});
 

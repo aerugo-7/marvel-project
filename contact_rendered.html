@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>联系我们 - S.H.I.E.L.D.</title>
+    <link rel="stylesheet" href="shield_styles.css">
+    <style>
+        :root {
+            --shield-cyan: #00f2ff;
+            --shield-blue: #0066ff;
+            --shield-bg: #050a10;
+            --shield-dark: #020408;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--shield-bg);
+            color: white;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+        }
+        
+        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+        
+        /* 导航栏样式 */
+        .navbar {
+            height: 65px; background: rgba(5, 15, 30, 0.95); border-bottom: 2px solid var(--shield-blue);
+            display: flex; align-items: center; padding: 0 50px; flex-shrink: 0; z-index: 1000;
+        }
+        
+        .nav-brand { font-weight: bold; letter-spacing: 2px; color: var(--shield-cyan); display: flex; align-items: center; }
+        
+        .nav-links { margin-left: auto; display: flex; gap: 25px; }
+        
+        .nav-item { color: #aaa; text-decoration: none; padding: 10px 15px; font-size: 14px; transition: 0.3s; }
+        
+        .nav-item:hover { color: var(--shield-cyan); }
+        
+        .nav-active { border-bottom: 2px solid var(--shield-cyan); color: var(--shield-cyan) !important; background: rgba(0, 242, 255, 0.1); }
+        
+        /* 主内容区 */
+        .main-content {
+            padding: 100px 50px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .page-title {
+            font-size: 48px;
+            color: var(--shield-cyan);
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px var(--shield-blue);
+            margin-bottom: 15px;
+        }
+        
+        .page-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 3px;
+        }
+        
+        /* 联系卡片网格 */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .contact-card {
+            background: linear-gradient(135deg, rgba(0, 30, 50, 0.8) 0%, rgba(0, 10, 20, 0.9) 100%);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            padding: 30px;
+            position: relative;
+            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+            transition: all 0.3s;
+        }
+        
+        .contact-card:hover {
+            border-color: var(--shield-cyan);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .contact-card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .contact-card-title {
+            font-size: 20px;
+            color: var(--shield-cyan);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .contact-card-content {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+        }
+        
+        .contact-card-content a {
+            color: var(--shield-cyan);
+            text-decoration: none;
+        }
+        
+        .contact-card-content a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 项目介绍区域 */
+        .project-intro {
+            background: linear-gradient(135deg, rgba(0, 30, 50, 0.6) 0%, rgba(0, 10, 20, 0.8) 100%);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .project-intro::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--shield-cyan), transparent, var(--shield-blue));
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            color: var(--shield-cyan);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .intro-text {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 2;
+            font-size: 15px;
+        }
+        
+        .intro-text p {
+            margin-bottom: 15px;
+        }
+        
+        /* 技术栈展示 */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tech-tag {
+            padding: 8px 20px;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--shield-cyan);
+            color: var(--shield-cyan);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid rgba(0, 242, 255, 0.2);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+        }
+        
+        .footer-logo {
+            font-size: 16px;
+            color: var(--shield-cyan);
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .contact-card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        .contact-card:nth-child(1) { animation-delay: 0.1s; }
+        .contact-card:nth-child(2) { animation-delay: 0.2s; }
+        .contact-card:nth-child(3) { animation-delay: 0.3s; }
+        .contact-card:nth-child(4) { animation-delay: 0.4s; }
+
+        /* 扫描线覆盖层 */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            overflow: hidden;
+        }
+        .scanline::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: 0;
+            width: 100%; height: 30%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.03), transparent);
+            animation: scanMove 6s linear infinite;
+        }
+        @keyframes scanMove {
+            0% { top: -30%; }
+            100% { top: 130%; }
+        }
+
+        /* 页面标题呼吸光晕 */
+        .page-title {
+            animation: shieldPulse 3s ease-in-out infinite;
+        }
+        @keyframes shieldPulse {
+            0%, 100% {
+                text-shadow:
+                    0 0 10px var(--shield-cyan),
+                    0 0 20px var(--shield-cyan),
+                    0 0 40px var(--shield-blue);
+                filter: brightness(1);
+            }
+            50% {
+                text-shadow:
+                    0 0 20px var(--shield-cyan),
+                    0 0 40px var(--shield-cyan),
+                    0 0 60px var(--shield-blue);
+                filter: brightness(1.2);
+            }
+        }
+    </style>
+</head>
+<body class="notranslate">
+    <canvas id="canvas-lightning"></canvas>
+    <div class="scanline"></div>
+
+<nav class="navbar">
+  <div class="nav-brand"><img src="./pic/shield_logo.webp" width="50" style="margin-right:10px;"> SHIELD_STRATEGIC_COMMAND</div>
+  <div class="nav-links">
+      <a href="dashboard_rendered.html" class="nav-item">势力格局</a> <!-- 当前页高亮 -->
+      <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
+      <a href="sim_rendered.html" class="nav-item">生存演习</a>
+      <a href="game_rendered.html" class="nav-item">回响计划</a>
+      <a href="simulation.html" class="nav-item">作战模拟舱</a> <!-- 🔥 新增/恢复此链接 -->
+      <a href="contact_rendered.html" class="nav-item nav-active">联系我们</a>
+  </div>
+</nav>
+    
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">Contact Us</h1>
+            <p class="page-subtitle">S.H.I.E.L.D. 全球超人类动态监测与综合评估系统</p>
+        </div>
+        
+        <!-- 项目介绍 -->
+        <div class="project-intro">
+            <h2 class="section-title">关于本项目</h2>
+            <div class="intro-text">
+                <p>本系统是基于漫威官方数据集构建的超人类数据分析与可视化平台。通过整合社交网络分析、数据可视化与交互式模拟技术，为用户提供全面的超级英雄与超级反派信息查询、势力格局分析、战斗模拟等服务。</p>
+                <p>所有数据均来自漫威官方公开信息与公开API信息，仅供学习与研究交流使用，不涉及任何商业用途。</p>
+                
+                <div class="tech-stack">
+                    <span class="tech-tag">数据可视化</span>
+                    <span class="tech-tag">社会网络分析</span>
+                    <span class="tech-tag">PageRank算法</span>
+                    <span class="tech-tag">BFS算法</span>
+                    <span class="tech-tag">D3.js</span>
+                    <span class="tech-tag">ECharts</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 联系卡片 -->
+        <div class="contact-grid">
+            <!-- 团队邮箱 -->
+            <div class="contact-card">
+                <div class="contact-card-icon">📧</div>
+                <h3 class="contact-card-title">团队邮箱</h3>
+                <div class="contact-card-content">
+                    <p>如果您有任何问题或建议，欢迎发送邮件联系我们：</p>
+                    <p><a href="mailto:aerugo0724@163.com">aerugo0724@163.com</a></p>
+                </div>
+            </div>
+            
+            <!-- GitHub -->
+            <div class="contact-card">
+                <div class="contact-card-icon">🐙</div>
+                <h3 class="contact-card-title">GitHub</h3>
+                <div class="contact-card-content">
+                    <p>查看项目源码，了解更多技术细节：</p>
+                    <p><a href="https://github.com/aerugo-7/marvel-project" target="_blank">github.com/marvel-data-project</a></p>
+                </div>
+            </div>
+            
+            <!-- 致谢 -->
+            <div class="contact-card">
+                <div class="contact-card-icon">🙏</div>
+                <h3 class="contact-card-title">感谢致谢</h3>
+                <div class="contact-card-content">
+                    <p>感谢漫威官方提供的数据集支持</p>
+                    <p>感谢所有为项目提供帮助的开发者与研究者</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-logo">S.H.I.E.L.D.</div>
+        <p>© 2026 S.H.I.E.L.D. 全球超人类动态监测与综合评估系统</p>
+        <p>本项目仅供学习交流使用，版权归漫威娱乐所有</p>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('canvas-lightning');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let mouse = { x: -1000, y: -1000 };
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
+        let particles =[];
+        class Particle {
+            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random() * 1.5 + 0.5; this.speedX = Math.random() * 2 - 1; this.speedY = Math.random() * 2 - 1; this.color = '#00f2ff'; this.life = 60; }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
+            draw() { ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.shadowBlur = 5; ctx.shadowColor = this.color; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); ctx.stroke(); }
+        }
+        function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<particles.length; i++) { particles[i].update(); particles[i].draw(); if(particles[i].life <= 0) { particles.splice(i, 1); i--; } } requestAnimationFrame(animate); }
+        animate();
+    </script>
+</body>
+</html>

@@ -13,6 +13,7 @@ import re
 CSV_PATH = os.path.join(os.path.dirname(__file__), "hero_master_final.csv")
 PIC_DIR = os.path.join(os.path.dirname(__file__), "pic", "heroes")
 SHIELD_LOGO = "pic/shield_logo.webp"
+SHIELD_PLACEHOLDER_PATH = "pic/shield_logo.webp"  # 用于CSV的完整相对路径
 
 def standardize_for_match(name: str) -> str:
     """标准化处理用于匹配"""
@@ -89,7 +90,7 @@ def main():
                         break
         
         if not matched:
-            hero['Image_URL'] = f"pic\\{SHIELD_LOGO}"
+            hero['Image_URL'] = "pic/shield_logo.webp"
             unmatched_heroes.append(hero_name)
     
     # 4. 写回CSV

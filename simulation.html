@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>神盾局：作战模拟舱</title>
+    <!-- 引入全局样式，和绝密档案完全一致 -->
+    <link rel="stylesheet" href="shield_styles.css">
+    
+    <style>
+        :root { --shield-cyan: #00f2ff; --shield-blue: #0066ff; --shield-danger: #ff4b4b; --shield-bg: #050a10; }
+        body, html { margin: 0; padding: 0; background-color: var(--shield-bg); color: white; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; height: 100vh; }
+        
+        .main-wrapper { min-height: 100vh; width: 100vw; display: flex; flex-direction: column; background: linear-gradient(rgba(5, 10, 16, 0.85), rgba(5, 10, 16, 0.85)), url('./pic/main_bg.jpg'); background-size: cover; background-position: center; background-attachment: fixed; }
+        #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+        
+        /* 扫描线效果，和绝密档案完全一致 */
+        .scanline-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; overflow: hidden; }
+        .scanline-overlay::before { content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 50%; background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.03), transparent); animation: scanLine 8s linear infinite; }
+        @keyframes scanLine { 0% { top: -50%; } 100% { top: 150%; } }
+
+        /* 导航栏，和绝密档案完全一致 */
+        .navbar { height: 65px; background: rgba(5, 15, 30, 0.95); border-bottom: 2px solid var(--shield-blue); display: flex; align-items: center; padding: 0 50px; flex-shrink: 0; z-index: 1000; position: relative; }
+        .navbar::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent 0%, var(--shield-cyan) 20%, var(--shield-cyan) 80%, transparent 100%); opacity: 0.6; }
+        .nav-brand { font-weight: bold; letter-spacing: 2px; color: var(--shield-cyan); display: flex; align-items: center; text-shadow: 0 0 10px rgba(0, 242, 255, 0.6); }
+        .nav-links { margin-left: auto; display: flex; gap: 25px; }
+        .nav-item { color: #aaa; text-decoration: none; padding: 10px 15px; font-size: 14px; transition: 0.3s; position: relative; overflow: hidden; }
+        .nav-item:hover { color: var(--shield-cyan); }
+        .nav-active { border-bottom: 2px solid var(--shield-cyan); color: var(--shield-cyan) !important; background: rgba(0, 242, 255, 0.1); }
+
+        .content { flex-grow: 1; padding: 40px; box-sizing: border-box; }
+        
+        /* 玻璃面板，和绝密档案完全一致 */
+        .glass-panel { background: rgba(10, 25, 47, 0.85); border: 1px solid var(--shield-blue); border-left: 5px solid var(--shield-cyan); border-radius: 4px; padding: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); position: relative; overflow: hidden; transition: all 0.3s; }
+        .glass-panel:hover { box-shadow: 0 15px 40px rgba(0, 242, 255, 0.15); }
+        .glass-panel::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.05), transparent); transition: left 0.5s; }
+        .glass-panel:hover::before { left: 100%; }
+        
+        /* 模块介绍卡片，和绝密档案完全一致 */
+        .intro-panel { background: linear-gradient(135deg, rgba(0, 242, 255, 0.1) 0%, rgba(0, 20, 40, 0.3) 100%); border-left-width: 8px; padding: 30px; animation: fadeInUp 0.6s ease-out; }
+        .intro-panel h1 { color: var(--shield-cyan); margin: 0 0 10px 0; font-size: 2rem; text-shadow: 0 0 20px rgba(0, 242, 255, 0.5); animation: pulseGlow 3s ease-in-out infinite; display: inline-block; }
+        
+        /* 游戏卡片容器：网格布局，彻底解决大小混乱 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            justify-content: center;
+        }
+
+        /* 游戏卡片样式：和全站风格统一，hover显示二维码 */
+        .game-card {
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--shield-cyan);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+            border-color: var(--shield-cyan);
+        }
+
+        /* 游戏封面：按原始尺寸居中显示 */
+        .game-cover {
+             width: auto;
+             height: auto;
+             max-width: 100%;
+             display: block;
+             transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .game-card:hover .game-cover {
+            transform: scale(1.02);
+        }
+
+        /* 二维码遮罩层：hover淡入，风格统一 */
+        .qrcode-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(5, 10, 16, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-card:hover .qrcode-overlay {
+            opacity: 1;
+        }
+
+        .qrcode-img {
+            width: 220px;
+            height: 220px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 2px solid var(--shield-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+        }
+
+        .qrcode-tip {
+            color: var(--shield-cyan);
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
+
+        .game-title {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            color: white;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            text-align: center;
+        }
+
+        /* 动画效果，和绝密档案完全一致 */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow { 0%, 100% { text-shadow: 0 0 20px rgba(0, 242, 255, 0.5); } 50% { text-shadow: 0 0 40px rgba(0, 242, 255, 0.8), 0 0 60px rgba(0, 242, 255, 0.4); } }
+        
+        @media (max-width: 768px) {
+            .game-grid { grid-template-columns: 1fr; }
+            .navbar { padding: 0 20px; }
+            .nav-links { gap: 10px; }
+            .nav-item { padding: 8px 10px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body class="notranslate">
+    <!-- 扫描线效果，和绝密档案完全一致 -->
+    <div class="scanline-overlay"></div>
+    <canvas id="canvas-lightning"></canvas>
+
+<nav class="navbar">
+  <div class="nav-brand"><img src="./pic/shield_logo.webp" width="50" style="margin-right:10px;"> SHIELD_STRATEGIC_COMMAND</div>
+  <div class="nav-links">
+      <a href="index.html" class="nav-item">首页</a>
+      <a href="dashboard_rendered.html" class="nav-item">势力格局</a>
+      <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
+      <a href="sim_rendered.html" class="nav-item">生存演习</a>
+      <a href="game_rendered.html" class="nav-item">回响计划</a>
+      <a href="simulation.html" class="nav-item nav-active">作战模拟舱</a>
+      <a href="contact_rendered.html" class="nav-item">联系我们</a>
+  </div>
+</nav>
+
+        <div class="content">
+            <!-- 1. 板块介绍区块：参考绝密档案，风格完全统一 -->
+            <div class="glass-panel intro-panel">
+                <div style="display: flex; align-items: center; gap: 25px;">
+                    <div style="font-size: 4rem; opacity: 0.9;">🎮</div>
+                    <div style="flex: 1;">
+                        <h1>作战模拟舱 / SHIELD SIMULATION CHAMBER</h1>
+                        <p style="color: #ccc; font-size: 1.1rem; line-height: 1.7; margin: 0;">
+                            作战模拟舱是神盾局为特工打造的<span style="color: var(--shield-cyan);">沉浸式互动训练与战术推演平台</span>。本模块整合漫威宇宙主题H5互动游戏、阵营对抗模拟、战术推演工具等内容，为特工提供随时随地的训练与娱乐体验。
+                            鼠标悬停游戏封面即可获取<span style="color: var(--shield-cyan);">移动端访问二维码</span>，扫码即可在手机端体验完整互动内容，点击封面可直接在电脑端打开。更多互动游戏即将上线，敬请期待！
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 游戏卡片区块：玻璃面板+网格布局，彻底解决大小混乱 -->
+            <div class="glass-panel" style="margin-top: 30px;">
+                <h2 style="color: var(--shield-cyan); margin-top: 0; margin-bottom: 25px; border-left: 4px solid var(--shield-cyan); padding-left: 15px;">
+                    🎯 可用模拟训练项目
+                </h2>
+
+                <!-- H5小游戏专项介绍 -->
+                <div style="background: linear-gradient(135deg, rgba(198, 61, 67, 0.12) 0%, rgba(20, 30, 50, 0.3) 100%);
+                    border-left: 4px solid #C53D43; border-radius: 6px; padding: 22px 28px; margin-bottom: 25px;
+                    animation: fadeInUp 0.7s ease-out;">
+                    <div style="display: flex; align-items: flex-start; gap: 18px;">
+                        <div style="font-size: 2.2rem; line-height: 1; flex-shrink: 0; margin-top: 3px;">⚡</div>
+                        <div>
+                            <h3 style="color: #C53D43; margin: 0 0 10px 0; font-size: 1.25rem;
+                                       text-shadow: 0 0 15px rgba(198, 61, 67, 0.4);">
+                                🎖️ 漫威内战：索科维亚协议 — 背景故事
+                            </h3>
+                            <p style="color: #ddd; font-size: 1rem; line-height: 1.8; margin: 0;">
+                                因超级英雄行动引发大规模平民伤亡，联合国推出《索科维亚协议》，要求英雄注册身份、接受政府管控。
+                                钢铁侠主张规则守护安全，美国队长坚守自由高于管控，联盟就此分裂。
+                                快来<strong style="color: var(--shield-cyan);">选择你的专属阵营</strong>，解锁关联英雄图谱吧！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-grid" style="display: flex; justify-content: center;">
+                    <!-- 游戏卡片1：漫威内战H5·索科维亚协议 -->
+                    <div class="game-card" onclick="window.open('https://x.eqxiu.com/s/aDPTJcTU?eip=true', '_blank')">
+                        <img src="pic/civil_war_cover.png" alt="漫威内战：索科维亚协议" class="game-cover">
+                        <div class="qrcode-overlay">
+                            <img src="pic/qc_H5.png" alt="扫码体验" class="qrcode-img">
+                            <p class="qrcode-tip">手机扫码体验<br>漫威内战：索科维亚协议</p>
+                        </div>
+                        <div class="game-title">🔥 漫威内战：索科维亚协议</div>
+                    </div>
+
+                    <!-- 预留：后续添加更多游戏卡片
+                    <div class="game-card">
+                        <img src="./pic/xxx_cover.jpg" alt="游戏名" class="game-cover">
+                        <div class="qrcode-overlay">
+                            <img src="./pic/qcode_xxx.png" alt="扫码体验" class="qrcode-img">
+                            <p class="qrcode-tip">扫码手机体验 游戏名</p>
+                        </div>
+                        <div class="game-title">游戏名</div>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 闪电特效代码：和绝密档案完全一致，保持风格统一 -->
+    <script>
+        const canvas = document.getElementById('canvas-lightning');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let mouse = { x: -1000, y: -1000 };
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
+        let particles =[];
+        class Particle {
+            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random() * 1.5 + 0.5; this.speedX = Math.random() * 2 - 1; this.speedY = Math.random() * 2 - 1; this.color = '#00f2ff'; this.life = 60; }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
+            draw() { ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.shadowBlur = 5; ctx.shadowColor = this.color; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); ctx.stroke(); }
+        }
+        function animate() { ctx.clearRect(0, 0, width, height); for(let i=0; i<particles.length; i++) { particles[i].update(); particles[i].draw(); if(particles[i].life <= 0) { particles.splice(i, 1); i--; } } requestAnimationFrame(animate); }
+        animate();
+
+        // 点击卡片跳转到易企秀H5（电脑端直接打开）
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const link = card.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (link) window.open(link, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>

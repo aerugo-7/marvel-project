@@ -2,244 +2,775 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>神盾局：系统启动终端</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神盾局：全球超人类动态监测与综合评估系统</title>
     <link rel="stylesheet" href="shield_styles.css">
     <style>
-        /* 首页专属样式 */
-        
-        /* 封面背景 */
-        #page-cover {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(5, 10, 16, 0.7), rgba(5, 10, 16, 0.95)),
-                        url('./pic/cover_bg.jpg');
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
-            z-index: 1;
+        :root {
+            --shield-cyan: #00f2ff;
+            --shield-blue: #0066ff;
+            --shield-bg: #050a10;
+            --glass-bg: rgba(10, 25, 47, 0.85);
+            --accent-red: #C53D43;
         }
 
-        /* 盾牌网格纹理 */
-        #page-cover::before {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 65px; }
+
+        body {
+            background-color: var(--shield-bg);
+            color: white;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* ===== 全局背景纹理 ===== */
+        body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(rgba(0, 242, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 255, 0.02) 1px, transparent 1px);
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.015) 1px, transparent 1px);
             background-size: 40px 40px;
             pointer-events: none;
-        }
-
-        /* 扫描线动画 */
-        .scanline {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 2;
-            overflow: hidden;
-        }
-        .scanline::before {
-            content: '';
-            position: absolute;
-            top: -50%; left: 0;
-            width: 100%; height: 30%;
-            background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.03), transparent);
-            animation: scanMove 6s linear infinite;
-        }
-        @keyframes scanMove {
-            0% { top: -30%; }
-            100% { top: 130%; }
+            z-index: 0;
         }
 
         #canvas-lightning { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
-        
-        /* SHIELD 标题 - 呼吸光晕效果 */
-        .hero-title { 
-            font-size: 100px; 
-            text-transform: uppercase; 
-            margin: 0; 
-            letter-spacing: 15px;
-            color: var(--shield-cyan);
-            text-shadow: 
-                0 0 10px var(--shield-cyan),
-                0 0 20px var(--shield-cyan),
-                0 0 40px var(--shield-cyan),
-                0 0 80px var(--shield-blue);
-            animation: shieldPulse 3s ease-in-out infinite;
+
+        /* ===== 导航栏（固定顶部） ===== */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%;
+            height: 65px;
+            background: rgba(5, 15, 30, 0.95);
+            border-bottom: 2px solid var(--shield-blue);
+            display: flex; align-items: center; padding: 0 40px;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
         }
-        
-        @keyframes shieldPulse {
-            0%, 100% {
-                text-shadow: 
-                    0 0 10px var(--shield-cyan),
-                    0 0 20px var(--shield-cyan),
-                    0 0 40px var(--shield-cyan),
-                    0 0 80px var(--shield-blue);
-                filter: brightness(1);
-            }
-            50% {
-                text-shadow: 
-                    0 0 20px var(--shield-cyan),
-                    0 0 40px var(--shield-cyan),
-                    0 0 60px var(--shield-cyan),
-                    0 0 100px var(--shield-blue);
-                filter: brightness(1.2);
-            }
+        .navbar.scrolled { background: rgba(5, 10, 16, 0.98); box-shadow: 0 4px 30px rgba(0, 242, 255, 0.1); }
+        .nav-brand { font-weight: bold; letter-spacing: 2px; color: var(--shield-cyan); display: flex; align-items: center; text-decoration: none; font-size: 14px; }
+        .nav-brand img { filter: drop-shadow(0 0 8px var(--shield-cyan)); }
+        .nav-links { margin-left: auto; display: flex; gap: 20px; }
+        .nav-item { color: #aaa; text-decoration: none; padding: 10px 16px; font-size: 13px; transition: 0.3s; border-bottom: 2px solid transparent; letter-spacing: 1px; }
+        .nav-item:hover { color: var(--shield-cyan); border-bottom-color: var(--shield-cyan); }
+        .nav-item.active { border-bottom: 2px solid var(--shield-cyan); color: var(--shield-cyan) !important; background: rgba(0, 242, 255, 0.08); }
+
+        /* ===== Section 1：英雄区 - 全屏封面 ===== */
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            min-height: 700px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+            background: linear-gradient(rgba(5, 10, 16, 0.7), rgba(5, 10, 16, 0.92)),
+                        url('./pic/cover_bg.jpg');
+            background-size: cover; background-position: center;
+            overflow: hidden;
+            z-index: 1;
         }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* 扫描线 */
+        .scanline {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2; overflow: hidden;
+        }
+        .scanline::before {
+            content: '';
+            position: absolute; top: -50%; left: 0;
+            width: 100%; height: 30%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.04), transparent);
+            animation: scanMove 6s linear infinite;
+        }
+        @keyframes scanMove { 0% { top: -30%; } 100% { top: 130%; } }
+
+        .hero-content { position: relative; z-index: 3; }
 
         /* Logo 脉冲光晕 */
-        .logo-container {
-            position: relative;
-            animation: logoFloat 4s ease-in-out infinite;
-        }
-        
-        @keyframes logoFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
+        .logo-container { position: relative; animation: logoFloat 4s ease-in-out infinite; }
+        @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
         .logo-container::after {
             content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 220px; height: 220px;
-            background: radial-gradient(circle, rgba(0, 242, 255, 0.2) 0%, transparent 70%);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.25) 0%, transparent 70%);
             animation: logoGlow 2s ease-in-out infinite;
         }
-        
         @keyframes logoGlow {
-            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
         }
 
-        /* 副标题 */
+        /* SHIELD 标题 */
+        .hero-title {
+            font-size: 110px; text-transform: uppercase; margin: 25px 0 0 0;
+            letter-spacing: 18px; color: var(--shield-cyan);
+            text-shadow: 0 0 10px var(--shield-cyan), 0 0 20px var(--shield-cyan),
+                         0 0 40px var(--shield-cyan), 0 0 80px var(--shield-blue);
+            animation: shieldPulse 3s ease-in-out infinite;
+        }
+        @keyframes shieldPulse {
+            0%, 100% { text-shadow: 0 0 10px var(--shield-cyan), 0 0 20px var(--shield-cyan), 0 0 40px var(--shield-cyan), 0 0 80px var(--shield-blue); filter: brightness(1); }
+            50% { text-shadow: 0 0 20px var(--shield-cyan), 0 0 40px var(--shield-cyan), 0 0 60px var(--shield-cyan), 0 0 100px var(--shield-blue); filter: brightness(1.2); }
+        }
+
         .subtitle {
-            font-size: 24px; 
-            letter-spacing: 5px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 10px;
+            font-size: 22px; letter-spacing: 6px; color: rgba(255, 255, 255, 0.7);
+            margin-top: 18px; font-weight: 300;
         }
 
-        /* 能量脉冲按钮 */
+        /* CTA 按钮 */
         .enter-btn {
-            position: relative; 
-            z-index: 10001; 
-            margin-top: 50px; 
-            padding: 18px 60px;
-            border: 2px solid var(--shield-cyan); 
+            position: relative; z-index: 10001; margin-top: 45px;
+            padding: 18px 55px; cursor: pointer;
+            border: 2px solid var(--shield-cyan);
             background: rgba(0, 242, 255, 0.1);
-            color: var(--shield-cyan); 
-            font-size: 20px; 
-            font-weight: bold;
-            letter-spacing: 3px;
-            cursor: pointer; 
-            transition: all 0.4s;
+            color: var(--shield-cyan); font-size: 17px; font-weight: bold;
+            letter-spacing: 4px; transition: all 0.4s;
             clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-            overflow: hidden;
+            overflow: hidden; text-decoration: none; display: inline-block;
         }
-        
         .enter-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0; height: 0;
-            background: rgba(0, 242, 255, 0.4);
-            border-radius: 50%;
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 0; height: 0; background: rgba(0, 242, 255, 0.4); border-radius: 50%;
             transition: width 0.6s, height 0.6s;
         }
-        
         .enter-btn:hover {
-            background: var(--shield-cyan);
-            color: var(--shield-dark);
-            box-shadow: 
-                0 0 30px var(--shield-cyan),
-                0 0 60px var(--shield-cyan),
-                0 0 100px rgba(0, 242, 255, 0.5);
+            background: var(--shield-cyan); color: var(--shield-bg);
+            box-shadow: 0 0 30px var(--shield-cyan), 0 0 60px var(--shield-cyan), 0 0 100px rgba(0, 242, 255, 0.5);
         }
-        
-        .enter-btn:hover::before {
-            width: 400px;
-            height: 400px;
+        .enter-btn:hover::before { width: 400px; height: 400px; }
+        .btn-text { position: relative; z-index: 1; }
+
+        /* 向下滚动箭头 */
+        .scroll-indicator {
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+            z-index: 3; animation: bounceDown 2s ease-in-out infinite;
         }
-        
-        /* 按钮内部文字 */
-        .btn-text {
-            position: relative;
-            z-index: 1;
+        .scroll-indicator span {
+            display: block; width: 28px; height: 28px;
+            border-right: 3px solid var(--shield-cyan); border-bottom: 3px solid var(--shield-cyan);
+            transform: rotate(45deg); opacity: 0.6;
+        }
+        @keyframes bounceDown {
+            0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.6; }
+            50% { transform: translateX(-50%) translateY(12px); opacity: 1; }
         }
 
         /* 底部能量条 */
-        .energy-bar-bottom {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                var(--shield-cyan) 20%, 
-                var(--shield-cyan) 80%, 
-                transparent 100%);
+        .energy-bar {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent 0%, var(--shield-cyan) 20%, var(--shield-cyan) 80%, transparent 100%);
             animation: energyFlow 2s linear infinite;
+        }
+        @keyframes energyFlow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* ===== Section 通用样式 ===== */
+        .section {
+            position: relative; z-index: 1; padding: 90px 40px;
+            max-width: 1300px; margin: 0 auto;
+        }
+        .section-title {
+            font-size: 32px; color: var(--shield-cyan); text-align: center;
+            margin-bottom: 12px; letter-spacing: 4px; font-weight: 600;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+        }
+        .section-subtitle {
+            text-align: center; color: #888; font-size: 15px; margin-bottom: 55px;
+            letter-spacing: 2px;
+        }
+        .glass-panel {
+            background: var(--glass-bg); border: 1px solid var(--shield-blue);
+            border-left: 5px solid var(--shield-cyan); border-radius: 4px;
+            padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .glass-panel:hover {
+            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.12);
+            transform: translateY(-3px);
+        }
+        .glass-panel::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.05), transparent);
+            transition: left 0.5s; pointer-events: none;
+        }
+        .glass-panel:hover::before { left: 100%; }
+
+        /* ===== Section 2：数据总览仪表盘 ===== */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: var(--glass-bg); border: 1px solid var(--shield-blue);
+            border-radius: 6px; padding: 35px 25px; text-align: center;
+            transition: all 0.35s; position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--shield-cyan), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.15);
+            border-color: var(--shield-cyan);
+        }
+        .stat-icon { font-size: 38px; margin-bottom: 12px; display: block; }
+        .stat-value {
+            font-size: 48px; color: var(--shield-cyan); font-family: 'Courier New', monospace;
+            font-weight: bold; line-height: 1; text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+        }
+        .stat-label { color: #aaa; font-size: 14px; margin-top: 10px; letter-spacing: 2px; text-transform: uppercase; }
+        .stat-desc { color: #666; font-size: 12px; margin-top: 5px; }
+
+        /* ===== Section 3：六大模块导航矩阵 ===== */
+        .modules-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+        }
+        .module-card {
+            background: var(--glass-bg); border: 1px solid rgba(0, 102, 255, 0.4);
+            border-radius: 6px; padding: 0; transition: all 0.4s; overflow: hidden;
+            position: relative; text-decoration: none; color: inherit; display: block;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 242, 255, 0.1);
+            border-color: var(--shield-cyan);
+        }
+        .module-accent {
+            height: 4px; width: 100%; transition: height 0.3s;
+        }
+        .module-card:hover .module-accent { height: 6px; }
+        .module-body { padding: 28px 26px 22px; }
+        .module-icon { font-size: 42px; margin-bottom: 12px; display: block; }
+        .module-name {
+            font-size: 20px; font-weight: bold; color: var(--shield-cyan);
+            margin-bottom: 8px; letter-spacing: 2px;
+        }
+        .module-desc {
+            color: #999; font-size: 13.5px; line-height: 1.7; margin-bottom: 18px;
+            min-height: 46px;
+        }
+        .module-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--shield-cyan); font-size: 13px; font-weight: bold;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        .module-card:hover .module-link { gap: 14px; color: #fff; }
+        .module-link-arrow { transition: transform 0.3s; }
+        .module-card:hover .module-link-arrow { transform: translateX(5px); }
+
+        /* 各模块独特配色 */
+        .accent-cyan    { background: linear-gradient(90deg, #00f2ff, #00a8cc); }
+        .accent-blue    { background: linear-gradient(90deg, #0066ff, #0044cc); }
+        .accent-red     { background: linear-gradient(90deg, #C53D43, #a02e33); }
+        .accent-gold    { background: linear-gradient(90deg, #f0a030, #d4881c); }
+        .accent-purple  { background: linear-gradient(90deg, #9945FF, #7722CC); }
+        .accent-green   { background: linear-gradient(90deg, #39d98a, #27b36e); }
+
+        /* ===== Section 4：核心亮点展示 ===== */
+        .highlights-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+        }
+        .highlight-card {
+            background: linear-gradient(135deg, rgba(10, 25, 47, 0.95) 0%, rgba(5, 15, 30, 0.9) 100%);
+            border-radius: 6px; padding: 35px 28px;
+            border-left: 5px solid var(--shield-cyan);
+            transition: all 0.4s; position: relative; overflow: hidden;
+        }
+        .highlight-card:nth-child(2) { border-left-color: var(--accent-red); }
+        .highlight-card:nth-child(3) { border-left-color: var(--shield-blue); }
+        .highlight-card:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4); }
+        .highlight-icon { font-size: 44px; margin-bottom: 16px; display: block; }
+        .highlight-title { font-size: 19px; font-weight: bold; color: #fff; margin-bottom: 12px; }
+        .highlight-desc { color: #aaa; font-size: 14px; line-height: 1.75; }
+        .highlight-tag {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; margin-top: 16px;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+        .tag-tech { background: rgba(0, 242, 255, 0.15); color: var(--shield-cyan); border: 1px solid rgba(0, 242, 255, 0.3); }
+        .tag-data { background: rgba(197, 61, 67, 0.15); color: var(--accent-red); border: 1px solid rgba(197, 61, 67, 0.3); }
+        .tag-game { background: rgba(57, 217, 138, 0.15); color: #39d98a; border: 1px solid rgba(57, 217, 138, 0.3); }
+
+        /* ===== Section 5：快速入口行动栏 ===== */
+        .action-section {
+            position: relative; z-index: 1; padding: 80px 40px;
+            background: linear-gradient(180deg, transparent 0%, rgba(197, 61, 67, 0.06) 50%, transparent 100%);
+        }
+        .action-inner { max-width: 1100px; margin: 0 auto; }
+        .action-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--glass-bg);
+            border: 1px solid rgba(197, 61, 67, 0.4); border-left: 5px solid var(--accent-red);
+            border-radius: 6px; padding: 28px 35px; margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .action-row:last-child { margin-bottom: 0; }
+        .action-row:hover {
+            border-color: var(--accent-red);
+            box-shadow: 0 10px 40px rgba(197, 61, 67, 0.15);
+            transform: translateX(5px);
+        }
+        .action-info { display: flex; align-items: center; gap: 20px; }
+        .action-emoji { font-size: 32px; }
+        .action-label { font-size: 14px; color: #888; margin-bottom: 4px; }
+        .action-name { font-size: 20px; font-weight: bold; color: #fff; }
+        .action-btn {
+            padding: 12px 32px; background: transparent;
+            border: 2px solid var(--accent-red); color: var(--accent-red);
+            font-size: 14px; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-block;
+        }
+        .action-btn:hover {
+            background: var(--accent-red); color: #fff;
+            box-shadow: 0 0 25px rgba(197, 61, 67, 0.4);
+        }
+
+        /* ===== Section 6：页脚 ===== */
+        .footer {
+            position: relative; z-index: 1;
+            background: linear-gradient(180deg, transparent, rgba(5, 10, 16, 0.95));
+            border-top: 1px solid rgba(0, 102, 255, 0.3);
+            padding: 50px 40px 35px; text-align: center;
+        }
+        .footer-logo { margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3)); }
+        .footer-brand { font-size: 16px; font-weight: bold; color: var(--shield-cyan); letter-spacing: 3px; margin-bottom: 15px; }
+        .footer-links { display: flex; justify-content: center; gap: 30px; margin-bottom: 25px; flex-wrap: wrap; }
+        .footer-links a { color: #888; text-decoration: none; font-size: 13px; transition: 0.3s; }
+        .footer-links a:hover { color: var(--shield-cyan); }
+        .footer-divider {
+            width: 80px; height: 1px; background: linear-gradient(90deg, transparent, var(--shield-blue), transparent);
+            margin: 0 auto 20px;
+        }
+        .footer-meta { color: #555; font-size: 12px; line-height: 1.9; letter-spacing: 1px; }
+        .footer-meta span { margin: 0 12px; color: #333; }
+        .footer-copy { color: #444; font-size: 11.5px; margin-top: 18px; }
+
+        /* ===== 入场动画 ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+            opacity: 0; animation: fadeInUp 0.7s ease forwards;
+        }
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.3s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.6s; }
+        .delay-5 { animation-delay: 0.75s; }
+        .delay-6 { animation-delay: 0.9s; }
+
+        /* ===== 响应式设计 ===== */
+        @media (max-width: 1199px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .modules-grid { grid-template-columns: repeat(2, 1fr); }
+            .highlights-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-title { font-size: 80px; letter-spacing: 12px; }
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 0 20px; }
+            .nav-links { gap: 10px; }
+            .nav-item { padding: 8px 10px; font-size: 11px; }
+            .nav-brand span { display: none; }
+            .section { padding: 60px 20px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .modules-grid { grid-template-columns: 1fr; }
+            .highlights-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 52px; letter-spacing: 8px; }
+            .subtitle { font-size: 14px; letter-spacing: 3px; }
+            .section-title { font-size: 24px; }
+            .stat-value { font-size: 34px; }
+            .action-row { flex-direction: column; gap: 18px; text-align: center; padding: 22px; }
+            .action-btn { width: 100%; text-align: center; }
+            .footer-links { gap: 18px; }
+            .logo-container img { width: 120px !important; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 40px; letter-spacing: 5px; }
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas-lightning"></canvas>
+
+<!-- 闪电粒子特效 -->
+<canvas id="canvas-lightning"></canvas>
+
+<!-- ========== 导航栏 ========== -->
+<nav class="navbar" id="navbar">
+    <a href="#home" class="nav-brand">
+        <img src="./pic/shield_logo.webp" width="40" style="margin-right:10px;">
+        SHIELD_COMMAND
+    </a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-item active">首页</a>
+        <a href="dashboard_rendered.html" class="nav-item">势力格局</a>
+        <a href="dossier_rendered.html" class="nav-item">绝密档案</a>
+        <a href="sim_rendered.html" class="nav-item">生存演习</a>
+        <a href="game_rendered.html" class="nav-item">回响计划</a>
+        <a href="simulation_rendered.html" class="nav-item">作战模拟舱</a>
+        <a href="contact.html" class="nav-item">联系我们</a>
+    </div>
+</nav>
+
+
+<!-- ==================== SECTION 1：全屏封面 ==================== -->
+<section class="hero-section" id="home">
     <div class="scanline"></div>
-    <div id="page-cover">
+    <div class="hero-content">
         <div class="logo-container">
-            <img src="./pic/shield_logo.webp" width="200" style="margin-bottom: 30px;">
+            <img src="./pic/shield_logo.webp" width="210">
         </div>
         <h1 class="hero-title">SHIELD</h1>
         <p class="subtitle">全球超人类动态监测与综合评估系统</p>
-        <button class="enter-btn" onclick="location.href='dashboard_rendered.html'">
-            <span class="btn-text">INITIALIZE SYSTEM</span>
-        </button>
+        <a href="#stats" class="enter-btn"><span class="btn-text">进入指挥中心 →</span></a>
     </div>
-    <div class="energy-bar-bottom"></div>
-    <script>
-        /* 鼠标闪电特效 */
-        const canvas = document.getElementById('canvas-lightning');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
-        let mouse = { x: -1000, y: -1000 };
-        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; for(let i=0; i<2; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
-        let particles = [];
-        class Particle {
-            constructor(x, y) { 
-                this.x = x; this.y = y; 
-                this.size = Math.random() * 1.5 + 0.5; 
-                this.speedX = Math.random() * 2 - 1; 
-                this.speedY = Math.random() * 2 - 1; 
-                this.color = '#00f2ff'; 
-                this.life = 60; 
-            }
-            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
-            draw() { 
-                ctx.strokeStyle = this.color; 
-                ctx.lineWidth = this.size; 
-                ctx.shadowBlur = 5; 
-                ctx.shadowColor = this.color; 
-                ctx.beginPath(); 
-                ctx.moveTo(this.x, this.y); 
-                ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4); 
-                ctx.stroke(); 
-            }
+    <div class="scroll-indicator"><span></span></div>
+    <div class="energy-bar"></div>
+</section>
+
+
+<!-- ==================== SECTION 2：数据总览仪表盘 ==================== -->
+<section class="section" id="stats">
+    <h2 class="section-title">系统数据概览</h2>
+    <p class="section-subtitle">STRATEGIC INTELLIGENCE DASHBOARD · 实时数据监控面板</p>
+
+    <div class="stats-grid">
+        <!-- 英雄总数 -->
+        <div class="stat-card animate-in delay-1">
+            <span class="stat-icon">🦸</span>
+            <div class="stat-value" data-target="496">0</div>
+            <div class="stat-label">超级英雄档案</div>
+            <div class="stat-desc">完整收录 · 多维度属性标注</div>
+        </div>
+        <!-- 图片资源 -->
+        <div class="stat-card animate-in delay-2">
+            <span class="stat-icon">🖼️</span>
+            <div class="stat-value" data-target="155">0</div>
+            <div class="stat-label">高清图片资源</div>
+            <div class="stat-desc">官方形象 · 高清渲染</div>
+        </div>
+        <!-- 功能模块 -->
+        <div class="stat-card animate-in delay-3">
+            <span class="stat-icon">⚡</span>
+            <div class="stat-value" data-target="6">0</div>
+            <div class="stat-label">核心功能模块</div>
+            <div class="stat-desc">分析 / 档案 / 模拟 / 游戏</div>
+        </div>
+        <!-- 关联网络 -->
+        <div class="stat-card animate-in delay-4">
+            <span class="stat-icon">🕸️</span>
+            <div class="stat-value">∞</div>
+            <div class="stat-label">社交关联边数</div>
+            <div class="stat-desc">关系图谱 · 网络分析</div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ==================== SECTION 3：六大模块导航矩阵 ==================== -->
+<section class="section" id="modules">
+    <h2 class="section-title">功能模块矩阵</h2>
+    <p class="section-subtitle">OPERATIONAL MODULES · 六大核心子系统入口</p>
+
+    <div class="modules-grid">
+        <!-- 模块1：势力格局 -->
+        <a href="dashboard_rendered.html" class="module-card animate-in delay-1">
+            <div class="module-accent accent-cyan"></div>
+            <div class="module-body">
+                <span class="module-icon">🌐</span>
+                <div class="module-name">宇宙势力格局</div>
+                <p class="module-desc">基于社会网络分析与图论算法，量化评估漫威宇宙6000+英雄的社交关系，揭示真正的权力枢纽。</p>
+                <span class="module-link">访问模块 <span class="module-link-arrow">→</span></span>
+            </div>
+        </a>
+
+        <!-- 模块2：绝密档案 -->
+        <a href="dossier_rendered.html" class="module-card animate-in delay-2">
+            <div class="module-accent accent-blue"></div>
+            <div class="module-body">
+                <span class="module-icon">📂</span>
+                <div class="module-name">绝密档案库</div>
+                <p class="module-desc">496位超级英雄的完整个人档案，涵盖能力参数、阵营归属、出场频率等多维度数据查询。</p>
+                <span class="module-link">访问模块 <span class="module-link-arrow">→</span></span>
+            </div>
+        </a>
+
+        <!-- 模块3：生存演习 -->
+        <a href="sim_rendered.html" class="module-card animate-in delay-3">
+            <div class="module-accent accent-red"></div>
+            <div class="module-body">
+                <span class="module-icon">🔥</span>
+                <div class="module-name">生存演习模拟</div>
+                <p class="module-desc">基于多因子加权算法的战术推演引擎，评估英雄在不同战场环境下的生存概率与作战效能。</p>
+                <span class="module-link">访问模块 <span class="module-link-arrow">→</span></span>
+            </div>
+        </a>
+
+        <!-- 模块4：回响计划 -->
+        <a href="game_rendered.html" class="module-card animate-in delay-4">
+            <div class="module-accent accent-gold"></div>
+            <div class="module-body">
+                <span class="module-icon">🎮</span>
+                <div class="module-name">回响计划 H5</div>
+                <p class="module-desc">沉浸式H5互动小游戏体验中心，以游戏化方式探索漫威宇宙的精彩故事与角色互动。</p>
+                <span class="module-link">访问模块 <span class="module-link-arrow">→</span></span>
+            </div>
+        </a>
+
+        <!-- 模块5：作战模拟舱 -->
+        <a href="simulation_rendered.html" class="module-card animate-in delay-5">
+            <div class="module-accent accent-purple"></div>
+            <div class="module-body">
+                <span class="module-icon">⚔️</span>
+                <div class="module-name">内战模拟舱</div>
+                <p class="module-desc">漫威内战主题阵营选择训练系统，支持钢铁侠vs美国队长阵营决策模拟与战术复盘。</p>
+                <span class="module-link">访问模块 <span class="module-link-arrow">→</span></span>
+            </div>
+        </a>
+
+        <!-- 模块6：联系我们 -->
+        <a href="contact.html" class="module-card animate-in delay-6">
+            <div class="module-accent accent-green"></div>
+            <div class="module-body">
+                <span class="module-icon">📡</span>
+                <div class="module-name">联络通讯站</div>
+                <p class="module-desc">项目信息反馈通道、技术文档查阅、团队联系方式及系统版本更新日志一览。</p>
+                <span class="module-link">访问模块 <span class="module-link-arrow">→</span></span>
+            </div>
+        </a>
+    </div>
+</section>
+
+
+<!-- ==================== SECTION 4：核心亮点展示 ==================== -->
+<section class="section" id="highlights">
+    <h2 class="section-title">技术核心亮点</h2>
+    <p class="section-subtitle">TECHNICAL HIGHLIGHTS · 三大创新驱动力</p>
+
+    <div class="highlights-grid">
+        <!-- 亮点1 -->
+        <div class="highlight-card animate-in delay-1">
+            <span class="highlight-icon">🕸️</span>
+            <div class="highlight-title">关联网络可视化引擎</div>
+            <p class="highlight-desc">
+                基于 vis-network 构建的交互式英雄社交关系图谱，支持节点拖拽缩放、力导向布局自动排列，
+                直观呈现复杂的人际关系网络拓扑结构。
+            </p>
+            <span class="highlight-tag tag-tech">Graph Visualization</span>
+        </div>
+
+        <!-- 亮点2 -->
+        <div class="highlight-card animate-in delay-2">
+            <span class="highlight-icon">📊</span>
+            <div class="highlight-title">多维度数据分析平台</div>
+            <p class="highlight-desc">
+                Plotly 驱动的交互式数据可视化，包含雷达图属性对比、多指标排名榜单、
+                动态图表联动，让枯燥的数据讲述精彩的故事。
+            </p>
+            <span class="highlight-tag tag-data">Data Analytics</span>
+        </div>
+
+        <!-- 亮点3 -->
+        <div class="highlight-card animate-in delay-3">
+            <span class="highlight-icon">⚡</span>
+            <div class="highlight-title">H5互动游戏体验</div>
+            <p class="highlight-desc">
+                漫威内战阵营选择 + 战术模拟训练双模式，沉浸式剧情引导与实时反馈机制，
+                让用户身临其境参与超级英雄的战略决策。
+            </p>
+            <span class="highlight-tag tag-game">Interactive Gaming</span>
+        </div>
+    </div>
+</section>
+
+
+<!-- ==================== SECTION 5：快速入口行动栏 ==================== -->
+<section class="action-section" id="actions">
+    <div class="action-inner">
+        <h2 class="section-title">快速行动入口</h2>
+        <p class="section-subtitle">QUICK ACCESS · 一键直达热门功能</p>
+
+        <div class="action-row animate-in delay-1">
+            <div class="action-info">
+                <span class="action-emoji">🎯</span>
+                <div>
+                    <div class="action-label">最受欢迎</div>
+                    <div class="action-name">绝密档案查询系统</div>
+                </div>
+            </div>
+            <a href="dossier_rendered.html" class="action-btn">立即访问 →</a>
+        </div>
+
+        <div class="action-row animate-in delay-2">
+            <div class="action-info">
+                <span class="action-emoji">⚡</span>
+                <div>
+                    <div class="action-label">新上线功能</div>
+                    <div class="action-name">内战作战模拟舱</div>
+                </div>
+            </div>
+            <a href="simulation_rendered.html" class="action-btn">开始模拟 →</a>
+        </div>
+    </div>
+</section>
+
+
+<!-- ==================== SECTION 6：页脚 ==================== -->
+<footer class="footer">
+    <img src="./pic/shield_logo.webp" width="60" class="footer-logo">
+    <div class="footer-brand">S.H.I.E.L.D. STRATEGIC COMMAND</div>
+    
+    <div class="footer-links">
+        <a href="#home">首页</a>
+        <a href="#stats">数据总览</a>
+        <a href="#modules">功能模块</a>
+        <a href="#highlights">核心亮点</a>
+        <a href="dashboard.html">势力格局</a>
+        <a href="dossier.html">绝密档案</a>
+        <a href="sim.html">生存演习</a>
+        <a href="game.html">回响计划</a>
+        <a href="simulation.html">作战模拟</a>
+        <a href="contact.html">联系我们</a>
+    </div>
+    
+    <div class="footer-divider"></div>
+    
+    <div class="footer-meta">
+        数据源 · Superhero API<span>|</span>可视化 · vis-network / Plotly.js<span>|</span>前端原生 HTML+CSS+JS
+    </div>
+    <div class="footer-copy">
+        © 2026 S.H.I.E.L.D. Strategic Command · 全球超人类动态监测与综合评估系统 v3.0<br>
+        本项目为学术研究与教学演示用途，所有漫威角色版权归 Marvel Comics 所有
+    </div>
+</footer>
+
+
+<!-- ==================== JavaScript ==================== -->
+<script>
+/* ====== 1. 鼠标闪电粒子特效 ====== */
+const canvas = document.getElementById('canvas-lightning');
+const ctx = canvas.getContext('2d');
+let width, height;
+function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+let mouse = { x: -1000, y: -1000 };
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    for(let i = 0; i < 2; i++) particles.push(new Particle(e.clientX, e.clientY));
+});
+
+let particles = [];
+class Particle {
+    constructor(x, y) {
+        this.x = x; this.y = y;
+        this.size = Math.random() * 1.5 + 0.5;
+        this.speedX = Math.random() * 2 - 1;
+        this.speedY = Math.random() * 2 - 1;
+        this.color = '#00f2ff';
+        this.life = 60;
+    }
+    update() { this.x += this.speedX; this.y += this.speedY; this.life -= 2; }
+    draw() {
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.size;
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + Math.random()*8-4, this.y + Math.random()*8-4);
+        ctx.stroke();
+    }
+}
+function animate() {
+    ctx.clearRect(0, 0, width, height);
+    for(let i = 0; i < particles.length; i++) {
+        particles[i].update(); particles[i].draw();
+        if(particles[i].life <= 0) { particles.splice(i, 1); i--; }
+    }
+    requestAnimationFrame(animate);
+}
+animate();
+
+
+/* ====== 2. 导航栏滚动效果 ====== */
+window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (window.scrollY > 60) navbar.classList.add('scrolled');
+    else navbar.classList.remove('scrolled');
+
+    // 首页导航栏：首页始终为激活状态（当前页面）
+});
+
+
+/* ====== 3. 数字计数器动画 ====== */
+function animateCounter(el) {
+    const target = parseInt(el.dataset.target);
+    if (!target || isNaN(target)) return;
+
+    const duration = 2000;
+    const startTime = performance.now();
+    const suffix = el.textContent.replace(/[0-9]/g, '');
+
+    function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // easeOutExpo
+        const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+
+        el.textContent = Math.floor(eased * target) + suffix;
+
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+// 使用 IntersectionObserver 触发动画
+const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
         }
-        function animate() { 
-            ctx.clearRect(0, 0, width, height); 
-            for(let i=0; i<particles.length; i++) { 
-                particles[i].update(); 
-                particles[i].draw(); 
-                if(particles[i].life <= 0) { particles.splice(i, 1); i--; } 
-            } 
-            requestAnimationFrame(animate); 
+    });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('[data-target]').forEach(el => counterObserver.observe(el));
+
+
+/* ====== 4. 滚动入场动画 ====== */
+const animObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+            animObserver.unobserve(entry.target);
         }
-        animate();
-    </script>
+    });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.animate-in').forEach(el => {
+    el.style.animationPlayState = 'paused';
+    animObserver.observe(el);
+});
+</script>
+
 </body>
 </html>

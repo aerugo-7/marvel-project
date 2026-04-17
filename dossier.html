@@ -79,7 +79,7 @@
         /* 雷达图标题 */
         .radar-title { margin-top: 25px; border-bottom: 1px solid var(--shield-cyan); padding-bottom: 10px; color: var(--shield-cyan); font-size: 1.2rem; }
         
-        #network-graph { width: 100%; height: 500px; border: 1px dashed var(--shield-blue); background: #050a10; border-radius: 4px; }
+        #network-graph { width: 100%; height: 800px; border: 1px dashed var(--shield-blue); background: #050a10; border-radius: 4px; }
         
         /* 标题样式 */
         h1, h2, h3 { color: var(--shield-cyan); }
@@ -101,10 +101,12 @@
         <nav class="navbar">
             <div class="nav-brand"><img src="./pic/shield_logo.webp" width="50" style="margin-right:10px;"> SHIELD_STRATEGIC_COMMAND</div>
             <div class="nav-links">
+                <a href="index.html" class="nav-item">首页</a>
                 <a href="dashboard_rendered.html" class="nav-item">势力格局</a>
                 <a href="dossier_rendered.html" class="nav-item nav-active">绝密档案</a>
                 <a href="sim_rendered.html" class="nav-item">生存演习</a>
                 <a href="game_rendered.html" class="nav-item">回响计划</a>
+                <a href="simulation.html" class="nav-item">作战模拟舱</a>
                 <a href="contact.html" class="nav-item">联系我们</a>
             </div>
         </nav>
@@ -194,16 +196,23 @@
                         </div>
                     </div>
                     
+                    <!-- 社交特质标签（网络图上方） -->
+                    <div style="margin-bottom:15px; text-align:center;">
+                        <span style="display:inline-block; padding:8px 20px; background:rgba(0,242,255,0.15); border:1px solid var(--shield-cyan); border-radius:20px; color:#00f2ff; font-weight:bold;" id="h-style">社交特质：--</span>
+                    </div>
+
                     <!-- 分析方法说明 -->
-                    <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 10px; line-height: 1.6;">
+                    <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 10px; line-height: 2.2;">
                         <b>算法说明：</b>使用vis.js网络图引擎，从全量16.5万条关系中提取该英雄的核心20人社交圈。<br>
                         <b>节点大小：</b>中心英雄(大号) vs 普通联系人(小号)<br>
                         <b>颜色编码：</b>青色=当前查询英雄，蓝色=直接邻居
                     </p>
                     <div id="network-graph"></div>
-                    <div style="margin-top:15px; text-align:center;">
-                        <span style="display:inline-block; padding:8px 20px; background:rgba(0,242,255,0.15); border:1px solid var(--shield-cyan); border-radius:20px; color:#00f2ff; font-weight:bold;" id="h-style">社交特质：--</span>
-                    </div>
+
+                    <!-- 颜色说明（网络图下方） -->
+                    <p style="color: #888; font-size: 0.85rem; margin-top: 10px; text-align:center; line-height: 1.8;">
+                        🎨 <b style="color:#00f2ff;">● 青色</b> = 当前查询英雄 &nbsp;&nbsp; <b style="color:#3b82f6;">● 蓝色</b> = 直接邻居
+                    </p>
                 </div>
             </div>
         </div>

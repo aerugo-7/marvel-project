@@ -8,7 +8,7 @@ from tqdm import tqdm
 print("[Sim] Starting stability exercise data extraction...")
 
 # --- 1. 路径配置 ---
-path = r"d:\shuzirenwendaolun\Marvel_v2\漫威_v2"
+path = r"d:\shuzirenwendaolun\marvel-project"
 template_path = os.path.join(path, "sim.html")
 output_path = os.path.join(path, "sim_rendered.html")
 
