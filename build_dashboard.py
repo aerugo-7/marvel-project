@@ -4,7 +4,7 @@ import plotly.io as pio
 import os
 
 # --- 1. 路径配置 ---
-path = r"E:\课程资料\6-大三下\数字人文导论\漫威_v3\漫威_v2"
+path = r"E:\课程资料\6-大三下\数字人文导论\marvel-project"
 template_path = os.path.join(path, "dashboard.html")
 output_path = os.path.join(path, "dashboard_rendered.html")
 
@@ -17,26 +17,21 @@ df = pd.read_csv(os.path.join(path, "hero_master_final.csv"))
 top_degree = df.sort_values('degree_score', ascending=False)
 top_between = df.sort_values('betweenness_score', ascending=False)
 
-# --- 3. 辅助函数：生成冠军 HTML 模块 ---
-def generate_champion_html(row, score_col, title_label, desc_text):
-    # 优先获取大模型链接，否则用默认 logo
-    img_url = row.get('Image_URL', './pic/shield_logo.webp')
-    if pd.isna(img_url) or str(img_url).strip() == "": 
-        img_url = './pic/shield_logo.webp'
-        
-    score_val = f"{row[score_col]:.4f}"
+# --- 3. 辅助函数：生成冠军 HTML 模块 (图片路径已完全固定) ---
+def generate_champion_html(row, score_col, title_label, desc_text, fixed_image_path):
+    # 直接使用你给出的相对路径
+    img_url = fixed_image_path
     
+    score_val = f"{row[score_col]:.4f}"  
     return f"""
     <div class="champion-section">
         <div class="champ-portrait">
-            <img src="{img_url}" class="champ-img" onerror="this.src='./pic/shield_logo.webp'; this.style.objectFit='contain';">
+            <img src="{img_url}" class="champ-img" onerror="this.src='./pic/shield_logo.webp';">
         </div>
         <div>
             <div class="champ-label">{title_label}</div>
             <h2 style="font-size: 48px; margin: 10px 0;">{row['Chinese_Name']}</h2>
-            <p style="font-size: 1.2rem; color: var(--shield-cyan);">
-                核心评分: {score_val}
-            </p>
+            <p style="font-size: 1.2rem; color: var(--shield-cyan);">核心评分: {score_val}</p>
             <div class="glass-panel" style="margin-top: 20px; background: rgba(0,0,0,0.2);">
                 <strong>情报评估：</strong> {desc_text}
             </div>
@@ -56,17 +51,19 @@ def generate_table_html(df_top, score_col):
 # ----------------- 执行生成 -----------------
 total_heroes = str(len(df))
 
-# 1. 生成名望榜 (Degree) 的冠军和表格
+# 1. 生成名望榜的冠军 - 固定为美国队长图片
 champ_degree_html = generate_champion_html(
     top_degree.iloc[0], 'degree_score', 'TOP STRATEGIC HUB (人脉名望)',
-    "该个体在全宇宙社交网络中具有不可逾越的统治地位。作为中心节点，其直接接触的英雄数量全宇宙第一。"
+    "该个体在全宇宙社交网络中具有不可逾越的统治地位。作为中心节点，其直接接触的英雄数量全宇宙第一。",
+    "./pic/heroes/CAPTAIN AMERICA.jpg"
 )
 table_degree_html = generate_table_html(top_degree, 'degree_score')
 
-# 2. 生成外交榜 (Betweenness) 的冠军和表格
+# 2. 生成外交榜的冠军 - 固定为蜘蛛侠图片
 champ_between_html = generate_champion_html(
     top_between.iloc[0], 'betweenness_score', 'TOP DIPLOMAT (外交枢纽)',
-    "该个体掌握着跨界沟通的命脉。由于其极高的中介中心性，他是连接互不相识的小团体（如复仇者与X战警）的最关键桥梁。"
+    "该个体掌握着跨界沟通的命脉。由于其极高的中介中心性，他是连接互不相识的小团体（如复仇者与X战警）的最关键桥梁。",
+    "./pic/heroes/SPIDER-MAN_PETER PARKER.jpg"
 )
 table_between_html = generate_table_html(top_between, 'betweenness_score')
 

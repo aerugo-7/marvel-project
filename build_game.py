@@ -6,8 +6,8 @@ import re
 from tqdm import tqdm
 
 # --- 1. 路径配置 ---
-path = r"E:\课程资料\6-大三下\数字人文导论\漫威_v3\漫威_v2"
-# 确保使用我们之前生成的战术数据库
+# 请确保此路径与您电脑实际路径一致
+path = r"E:\课程资料\6-大三下\数字人文导论\marvel-project"
 db_path = os.path.join(path, "hero_tactical_v3.csv") 
 network_path = os.path.join(path, "cleaned_hero_network.csv")
 master_path = os.path.join(path, "hero_master_final.csv")
@@ -16,16 +16,9 @@ output_path = os.path.join(path, "game_rendered.html")
 
 print("[Game] Starting S.H.I.E.L.D. tactical system (Matrix Engine)...")
 
-# --- 2. 辅助函数：生成图片路径（已弃用，保留但不使用）---
-def get_hero_img_path(eng_name):
-    # 将 "IRON MAN/TONY STARK" 转为 "iron_man"
-    clean_name = eng_name.split('/')[0].strip().lower().replace(' ', '_')
-    clean_name = re.sub(r'[^\w]', '', clean_name)
-    return f"./pic/heroes/{clean_name}.jpg"
-
-# --- 2.1 辅助函数：解析 Modules_JSON 供步骤04滑块计算使用 ---
+# --- 2. 辅助函数：解析 Modules_JSON 供步骤04滑块计算使用 ---
 def parse_modules(modules_json_str):
-    """解析 Modules_JSON 字段，提取 Tech/Diplomacy/Force 三个模块的权重"""
+    """保持原样逻辑"""
     default_module = {
         "name": "默认行动",
         "weights": {"order": 0, "cohesion": 0, "trust": 0},
@@ -38,7 +31,6 @@ def parse_modules(modules_json_str):
         for key in ["Tech", "Diplomacy", "Force"]:
             if key in modules:
                 m = modules[key]
-                # 构建模块结构供前端实时计算
                 result[key] = {
                     "name": m.get("name", key),
                     "weights": {
@@ -64,14 +56,10 @@ tac_df = pd.read_csv(db_path)
 master_df = pd.read_csv(master_path)
 edges_df = pd.read_csv(network_path)
 
-# 构建全量社交网络（6000+人）
 G_base = nx.from_pandas_edgelist(edges_df, 'hero1', 'hero2')
 print("[Game] Scanning current power status (PageRank)...")
 base_pagerank = nx.pagerank(G_base, max_iter=50)
 name_map = dict(zip(master_df['English_Name'], master_df['Chinese_Name']))
-
-# --- 新增：构建英文名 -> Image_URL 的映射（与第二套代码逻辑一致）---
-img_map = dict(zip(master_df['English_Name'], master_df['Image_URL']))
 
 # --- 4. 核心演算逻辑 ---
 game_db = {}
@@ -81,21 +69,32 @@ for _, row in tqdm(tac_df.iterrows(), total=len(tac_df)):
     hero_eng = row['English_Name']
     hero_cn = row['Chinese_Name']
     
-    # --- 新增：图片 URL 处理（完全模仿第二套代码）---
-    img_url = img_map.get(hero_eng, './pic/shield_logo.webp')
-    if pd.isna(img_url) or str(img_url).strip() == '':
-        img_url = './pic/shield_logo.webp'
-    # 将反斜杠转为正斜杠
-    img_url = str(img_url).replace('\\', '/')
-    # 确保路径以 ./ 开头（相对路径）
-    if not img_url.startswith('./') and not img_url.startswith('http'):
-        img_url = './' + img_url
-    
-    # 解析 Modules_JSON 字段获取两个行动
+    # ==================== 【核心修改点：图片路径硬编码逻辑】 ====================
+    # 完全仿照 dashboard 成功的逻辑：处理截断名并指向本地 heroes 文件夹
+    # ==================== 【修改部分开始】 ====================
+    # 1. 获取文件夹下所有真实的图片文件名
+    try:
+        actual_files = os.listdir(os.path.join(path, "pic", "heroes"))
+    except:
+        actual_files = []
+
+    # 2. 准备匹配：把 CSV 里的名字转为纯字母大写
+    clean_target = re.sub(r'[^A-Z0-9]', '', str(hero_eng).upper())
+    img_url = "./pic/shield_logo.webp" # 默认占位图
+
+    # 3. 遍历文件夹寻找最匹配的文件
+    for f in actual_files:
+        if f.lower().endswith('.jpg'):
+            # 把文件名也转为纯字母大写进行比对
+            clean_f = re.sub(r'[^A-Z0-9]', '', f.upper().replace('.JPG', ''))
+            # 逻辑：如果名字完全包含，或者前 15 位对得上（处理截断）
+            if clean_target.startswith(clean_f) or clean_f.startswith(clean_target[:15]):
+                img_url = f"./pic/heroes/{f}"
+                break    
+    # 解析 Modules_JSON 字段获取两个行动（保持原逻辑不变）
     processed_results = {}
     try:
         modules_json = json.loads(row['Modules_JSON'])
-        # 获取前两个行动
         action_keys = list(modules_json.keys())[:2]
         for i, key in enumerate(action_keys):
             module = modules_json[key]
@@ -106,18 +105,15 @@ for _, row in tqdm(tac_df.iterrows(), total=len(tac_df)):
             G_sim = G_base.copy()
             target = impact_target
             
-            # 修改网络结构
             if target and G_sim.has_node(hero_eng) and G_sim.has_node(target):
                 if op == 'remove' and G_sim.has_edge(hero_eng, target):
                     G_sim.remove_edge(hero_eng, target)
                 elif op == 'add':
                     G_sim.add_edge(hero_eng, target)
                     
-                # 1. 计算宇宙凝聚力损毁度
                 size_new = len(max(nx.connected_components(G_sim), key=len))
                 impact_val = round((6399 - size_new) / 63.99, 4)
                 
-                # 2. 计算权力大洗牌 (PageRank 变化)
                 new_pr = nx.pagerank(G_sim, max_iter=30, tol=1e-04)
                 diff = {n: new_pr[n] - base_pagerank.get(n, 0) for n in new_pr if n in base_pagerank}
                 if hero_eng in diff: del diff[hero_eng]
@@ -132,12 +128,9 @@ for _, row in tqdm(tac_df.iterrows(), total=len(tac_df)):
                     "loser": name_map.get(loser_eng, loser_eng)
                 }
     except Exception as e:
-        # 如果解析失败，使用默认数据
-        processed_results = {
-            "Tech": {"label": "科技干预", "impact_pct": "0.01", "winner": "美国队长", "loser": "钢铁侠"}
-        }
+        processed_results = {"Tech": {"label": "科技干预", "impact_pct": "0.01", "winner": "美国队长", "loser": "钢铁侠"}}
     
-    # 封存档案数据
+    # 封存档案数据（确保所有键名如 effects、modules 保持原样）
     game_db[hero_cn] = {
         "name": hero_cn,
         "eng": hero_eng,
@@ -149,8 +142,7 @@ for _, row in tqdm(tac_df.iterrows(), total=len(tac_df)):
         "effects": processed_results,
         "audit_pos": str(row['Evaluation'])[:100] if pd.notna(row['Evaluation']) else "",
         "audit_neg": "",
-        "img": img_url,   # 修改：使用从 CSV 读取并清洗后的 URL
-        # 新增：完整解析 Modules_JSON 供步骤04滑块计算使用
+        "img": img_url,   
         "modules": parse_modules(row['Modules_JSON'])
     }
 
@@ -160,10 +152,8 @@ try:
     with open(template_path, 'r', encoding='utf-8') as f:
         html_content = f.read()
 
-    # 注入 JSON 数据
     html_content = html_content.replace('{{ hero_game_json }}', json.dumps(game_db, ensure_ascii=False))
     
-    # 注入一个随机 ID 模拟档案编号
     import random
     html_content = html_content.replace('{{ random_id }}', str(random.randint(10000, 99999)))
 
@@ -171,8 +161,7 @@ try:
         f.write(html_content)
     
     print("-" * 30)
-    print("[OK] Echo Project completed!")
-    print(f"Output: {output_path}")
+    print(f"[OK] game_rendered.html generated successfully!")
 
 except Exception as e:
     print(f"[ERROR] Injection failed: {e}")
