@@ -6,7 +6,7 @@ import json
 print("[Build] Starting dossier data engine...")
 
 # --- 1. 路径配置 ---
-path = r"d:\shuzirenwendaolun\marvel-project"
+path = r"E:\课程资料\6-大三下\数字人文导论\marvel-project"
 template_path = os.path.join(path, "dossier.html")
 output_path = os.path.join(path, "dossier_rendered.html")
 
